@@ -231,7 +231,8 @@ impl IpcBridgeCore {
                 cb(&event_name, msg.payload);
             }
             // Transfer lifecycle events
-            "transfer.started" | "transfer.progress" | "transfer.complete" | "transfer.error" => {
+            "transfer.started" | "transfer.progress" | "transfer.complete" | "transfer.error"
+            | "transfer.paused" | "transfer.resumed" => {
                 let event_name = format!("daemon://{}", msg.msg_type.replace('.', "-"));
                 tracing::info!("[IPC_BRIDGE] transfer event: {}", msg.msg_type);
                 cb(&event_name, msg.payload);
