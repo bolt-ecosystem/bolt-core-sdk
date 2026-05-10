@@ -94,7 +94,7 @@ The transport MUST expose at minimum:
 
 - **Status**: Reference (RC3). Strategic target for native↔native (app↔app) — see APP-TO-APP-QUIC-MIGRATION-1.
 - **Current production path**: Native↔native currently uses WebSocket client mode (see above). QUIC is the intended replacement but is not yet wired into WsEndpoint mode, signaling, or IPC pairing.
-- **RC3 limitations**: Self-signed certs with no verification (`Rc3SkipVerification`). No identity-key binding to QUIC TLS. No signaling/discovery integration. Feature-gated behind `transport-quic` (not in default features).
+- **RC3 limitations**: Self-signed certs with no verification (`Rc3SkipVerification`). No transport-layer peer authentication (production target: mutual cert-hash pinning per APP-TO-APP-QUIC-SECURITY-DECISION-1; see `bolt-ecosystem/docs/ROADMAP.md` Workstream Q). No signaling/discovery integration. Feature-gated behind `transport-quic` (not in default features).
 - **Ordered delivery**: QUIC bidirectional streams provide ordered delivery natively.
 - **Reliability**: QUIC streams are reliable by default.
 - **Message framing**: Application-level length-prefix framing required (QUIC streams are byte-oriented).
