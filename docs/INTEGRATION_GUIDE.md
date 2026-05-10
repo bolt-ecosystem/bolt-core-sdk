@@ -257,9 +257,10 @@ key derivation) from scratch. Use the canonical crates or `@the9ines/bolt-core`.
 
 | Endpoint Pair | Transport | Status |
 |--------------|-----------|--------|
-| native↔native (app↔app) | QUIC via quinn (Rust) | Supported |
-| browser↔browser | WebRTC DataChannel | Supported (G1 invariant — immutable) |
-| HTTPS web↔native | WebTransport (HTTP/3) | Supported (production) |
+| native↔native (app↔app) | WebSocket client mode | Production (current) |
+| native↔native (target) | QUIC via quinn (Rust) | Reference (RC3, strategic target) |
+| browser↔browser | WebRTC DataChannel | Production (G1 invariant — immutable) |
+| HTTPS web↔native | WebTransport (HTTP/3) | Production |
 | HTTP/localhost web↔native | WebSocket-direct | Supported (dev/LAN only) |
 
 **G1 invariant:** browser↔browser always uses WebRTC. This is not negotiable.
@@ -278,7 +279,7 @@ only. No TLS is required. This path applies when the browser origin is HTTP
 
 | Path | Why |
 |------|-----|
-| Native WebRTC (app↔app or app↔browser via WebRTC) | Native path uses QUIC; web↔native uses WebTransport. WebRTC is browser↔browser only. |
+| Native WebRTC (app↔app or app↔browser via WebRTC) | Native↔native currently uses WS client mode (QUIC is strategic target, RC3). Web↔native uses WebTransport. WebRTC is browser↔browser only. |
 | HTTPS web → plain ws:// native | Mixed content — browsers block ws:// from HTTPS origins. Impossible. |
 | Raw QUIC from browsers | Browsers do not expose raw QUIC sockets; WebTransport is the browser QUIC surface |
 | UDP datagrams without reliability layer | Violates transport contract §1 (ordered + reliable required) |

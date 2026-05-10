@@ -82,13 +82,24 @@ The transport MUST expose at minimum:
 - **Requirements**: Must satisfy the same ordered/reliable/message-framed contract.
 - **Graduation criteria**: See `ECOSYSTEM_STRATEGY.md` § Headless Transport Lane.
 
+### WebSocket Client Mode (daemon↔daemon)
+
+- **Status**: Production. Current native↔native (app↔app) transport.
+- **Flow**: Initiator daemon connects as WS client to acceptor daemon's WS server endpoint. Same session-key exchange, HELLO handshake, ProfileEnvelopeV1 envelope, and BTR ratchet as browser↔daemon WS.
+- **Discovery**: Rendezvous signaling — acceptor sends `wsUrl` in `connection_accepted` signal payload (NATIVE-CONNECT-1).
+- **Implementation**: `ws_endpoint::connect_to_remote_ws()` triggered via `connect_remote.signal` file watcher in WsEndpoint mode.
+- **Future**: Will be superseded by QUIC when APP-TO-APP-QUIC-MIGRATION-1 completes. WS client mode will remain as fallback.
+
 ### QUIC via quinn (Rust)
 
-- **Status**: Supported. Used for native↔native (app↔app) transfers.
+- **Status**: Reference (RC3). Strategic target for native↔native (app↔app) — see APP-TO-APP-QUIC-MIGRATION-1.
+- **Current production path**: Native↔native currently uses WebSocket client mode (see above). QUIC is the intended replacement but is not yet wired into WsEndpoint mode, signaling, or IPC pairing.
+- **RC3 limitations**: Self-signed certs with no verification (`Rc3SkipVerification`). No identity-key binding to QUIC TLS. No signaling/discovery integration. Feature-gated behind `transport-quic` (not in default features).
 - **Ordered delivery**: QUIC bidirectional streams provide ordered delivery natively.
 - **Reliability**: QUIC streams are reliable by default.
 - **Message framing**: Application-level length-prefix framing required (QUIC streams are byte-oriented).
 - **Backpressure**: QUIC flow control provides stream-level and connection-level backpressure.
+- **Graduation criteria**: APP-TO-APP-QUIC-MIGRATION-1 (bolt-ecosystem ROADMAP.md).
 
 ### WebTransport (HTTP/3)
 
@@ -111,12 +122,15 @@ The transport MUST expose at minimum:
 
 | Endpoint Pair | Transport | Status |
 |--------------|-----------|--------|
-| native↔native (app↔app) | QUIC via quinn (Rust) | Supported |
-| browser↔browser | WebRTC DataChannel | Supported (G1 invariant — immutable) |
-| HTTPS web↔native | WebTransport (HTTP/3) | Supported (production) |
+| native↔native (app↔app) | WebSocket client mode | Production (current) |
+| native↔native (target) | QUIC via quinn (Rust) | Reference (RC3, strategic target) |
+| browser↔browser | WebRTC DataChannel | Production (G1 invariant — immutable) |
+| HTTPS web↔native | WebTransport (HTTP/3) | Production |
 | HTTP/localhost web↔native | WebSocket-direct | Supported (dev/LAN only) |
 
 **G1 invariant:** browser↔browser always uses WebRTC. This is not negotiable.
+
+**N1 invariant:** native↔native uses WS client mode today. QUIC is the strategic target but not yet production. See APP-TO-APP-QUIC-MIGRATION-1.
 
 ## 3. Binary Encoding Rule
 
