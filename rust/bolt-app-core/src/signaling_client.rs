@@ -19,6 +19,10 @@ struct RegisterMsg {
     peer_code: String,
     device_name: String,
     device_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    wt_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    wt_cert_hash: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -59,6 +63,12 @@ pub struct PeerInfo {
     pub peer_code: String,
     pub device_name: String,
     pub device_type: String,
+    /// WebTransport URL (optional, desktop peers with WT enabled).
+    #[serde(default)]
+    pub wt_url: Option<String>,
+    /// WebTransport TLS cert SHA-256 hash hex (optional).
+    #[serde(default)]
+    pub wt_cert_hash: Option<String>,
 }
 
 // ── Events (shell-facing) ────────────────────────────────────
@@ -114,6 +124,10 @@ pub struct SignalingConfig {
     pub peer_code: String,
     pub device_name: String,
     pub device_type: String,
+    /// WebTransport URL to advertise to peers (optional).
+    pub wt_url: Option<String>,
+    /// WebTransport TLS cert SHA-256 hash hex to advertise (optional).
+    pub wt_cert_hash: Option<String>,
 }
 
 // ── Client handle ────────────────────────────────────────────
@@ -168,6 +182,8 @@ pub fn spawn_signaling_client(
         peer_code: config.peer_code.clone(),
         device_name: config.device_name.clone(),
         device_type: config.device_type.clone(),
+        wt_url: config.wt_url.clone(),
+        wt_cert_hash: config.wt_cert_hash.clone(),
     };
     std::thread::spawn(move || {
         run_signaling_client(
@@ -192,6 +208,8 @@ pub fn spawn_signaling_client(
                 peer_code: config.peer_code.clone(),
                 device_name: config.device_name.clone(),
                 device_type: config.device_type.clone(),
+                wt_url: config.wt_url.clone(),
+                wt_cert_hash: config.wt_cert_hash.clone(),
             };
             std::thread::spawn(move || {
                 run_signaling_client(
@@ -269,6 +287,8 @@ fn run_signaling_client(
                     peer_code: config.peer_code.clone(),
                     device_name: config.device_name.clone(),
                     device_type: config.device_type.clone(),
+                    wt_url: config.wt_url.clone(),
+                    wt_cert_hash: config.wt_cert_hash.clone(),
                 };
                 if let Err(e) = socket.send(Message::Text(serde_json::to_string(&register).unwrap())) {
                     tracing::warn!("[SIGNALING] register failed: {e}");
@@ -420,6 +440,8 @@ mod tests {
             peer_code: "ABC123".into(),
             device_name: "Test".into(),
             device_type: "desktop".into(),
+            wt_url: None,
+            wt_cert_hash: None,
         };
         let json = serde_json::to_string(&msg).unwrap();
         assert!(json.contains("\"type\":\"register\""));

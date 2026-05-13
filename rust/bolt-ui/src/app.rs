@@ -134,6 +134,8 @@ impl BoltApp {
                 peer_code: local_peer_code.clone(),
                 device_name,
                 device_type: "desktop".to_string(),
+                wt_url: None,
+                wt_cert_hash: None,
             },
             Box::new(move |event| {
                 let _ = tx.send(event);
