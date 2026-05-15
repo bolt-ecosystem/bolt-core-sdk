@@ -86,15 +86,15 @@ The transport MUST expose at minimum:
 
 - **Status**: Production. Current native↔native (app↔app) transport.
 - **Flow**: Initiator daemon connects as WS client to acceptor daemon's WS server endpoint. Same session-key exchange, HELLO handshake, ProfileEnvelopeV1 envelope, and BTR ratchet as browser↔daemon WS.
-- **Discovery**: Rendezvous signaling — acceptor sends `wsUrl` in `connection_accepted` signal payload (NATIVE-CONNECT-1).
-- **Implementation**: `ws_endpoint::connect_to_remote_ws()` triggered via `connect_remote.signal` file watcher in WsEndpoint mode.
+- **Discovery**: Rendezvous signaling — peers exchange `wsUrl` today and optional QUIC metadata (`quicAddr`, `quicCertHash`) for the migration path (NATIVE-CONNECT-1 / APP-TO-APP-QUIC-MIGRATION-1).
+- **Implementation**: `ws_endpoint::connect_to_remote_ws()` triggered via `connect_remote.signal` file watcher in WsEndpoint mode. The signal parser accepts both legacy plain WS URLs and structured JSON with QUIC metadata, but routing still falls back to WS until QUIC app-session routing lands.
 - **Future**: Will be superseded by QUIC when APP-TO-APP-QUIC-MIGRATION-1 completes. WS client mode will remain as fallback.
 
 ### QUIC via quinn (Rust)
 
 - **Status**: Reference (RC3). Strategic target for native↔native (app↔app) — see APP-TO-APP-QUIC-MIGRATION-1.
-- **Current production path**: Native↔native currently uses WebSocket client mode (see above). QUIC is the intended replacement but is not yet wired into WsEndpoint mode, signaling, or IPC pairing.
-- **RC3 limitations**: Self-signed certs with no verification (`Rc3SkipVerification`). No transport-layer peer authentication (production target: mutual cert-hash pinning per APP-TO-APP-QUIC-SECURITY-DECISION-1; see `bolt-ecosystem/docs/ROADMAP.md` Workstream Q). No signaling/discovery integration. Feature-gated behind `transport-quic` (not in default features).
+- **Current production path**: Native↔native currently uses WebSocket client mode (see above). QUIC is the intended replacement; metadata publication, native signaling fields, structured connect signals, and internal cert-hash pinning primitives exist, but production QUIC app-session routing, IPC/session lifecycle parity, and promotion gates are not complete.
+- **RC3/Q2 limitations**: Self-signed certs with migration-stage cert-hash pinning primitives. Mutual cert-hash pinning is the production target per APP-TO-APP-QUIC-SECURITY-DECISION-1; see `bolt-ecosystem/docs/ROADMAP.md` Workstream Q. The daemon does not yet consume signaling-supplied peer hashes for production QUIC session establishment. Feature-gated behind `transport-quic` (not in default features).
 - **Ordered delivery**: QUIC bidirectional streams provide ordered delivery natively.
 - **Reliability**: QUIC streams are reliable by default.
 - **Message framing**: Application-level length-prefix framing required (QUIC streams are byte-oriented).
