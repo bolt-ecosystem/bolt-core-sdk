@@ -84,22 +84,24 @@ The transport MUST expose at minimum:
 
 ### WebSocket Client Mode (daemon↔daemon)
 
-- **Status**: Production. Current native↔native (app↔app) transport.
-- **Flow**: Initiator daemon connects as WS client to acceptor daemon's WS server endpoint. Same session-key exchange, HELLO handshake, ProfileEnvelopeV1 envelope, and BTR ratchet as browser↔daemon WS.
-- **Discovery**: Rendezvous signaling — peers exchange `wsUrl` today and optional QUIC metadata (`quicAddr`, `quicCertHash`) for the migration path (NATIVE-CONNECT-1 / APP-TO-APP-QUIC-MIGRATION-1).
-- **Implementation**: `ws_endpoint::connect_to_remote_ws()` triggered via `connect_remote.signal` file watcher in WsEndpoint mode. The signal parser accepts both legacy plain WS URLs and structured JSON with QUIC metadata, but routing still falls back to WS until QUIC app-session routing lands.
-- **Future**: Will be superseded by QUIC when APP-TO-APP-QUIC-MIGRATION-1 completes. WS client mode will remain as fallback.
+- **Status**: Fallback. Native↔native (app↔app) product builds prefer QUIC when complete QUIC metadata is available, and fall back to WS client mode when QUIC metadata is missing or QUIC connection setup fails.
+- **Flow**: Initiator daemon connects as WS client to acceptor daemon's WS server endpoint. Same session-key exchange, HELLO handshake, ProfileEnvelopeV1 envelope, and BTR ratchet as QUIC and browser↔daemon WS.
+- **Discovery**: Rendezvous signaling includes `wsUrl` for fallback and may include QUIC metadata (`quicAddr`, `quicCertHash`) for the preferred path (NATIVE-CONNECT-1 / APP-TO-APP-QUIC-MIGRATION-1).
+- **Implementation**: `ws_endpoint::connect_to_remote_ws()` triggered via `connect_remote.signal` file watcher in WsEndpoint mode. The signal parser accepts both legacy plain WS URLs and structured JSON with QUIC metadata. Legacy plain WS signals still route to WS.
+- **Compatibility**: Must remain available after QUIC graduation.
 
 ### QUIC via quinn (Rust)
 
-- **Status**: Reference (RC3). Strategic target for native↔native (app↔app) — see APP-TO-APP-QUIC-MIGRATION-1.
-- **Current production path**: Native↔native currently uses WebSocket client mode (see above). QUIC is the intended replacement; metadata publication, native signaling fields, structured connect signals, and internal cert-hash pinning primitives exist, but production QUIC app-session routing, IPC/session lifecycle parity, and promotion gates are not complete.
-- **RC3/Q2 limitations**: Self-signed certs with migration-stage cert-hash pinning primitives. Mutual cert-hash pinning is the production target per APP-TO-APP-QUIC-SECURITY-DECISION-1; see `bolt-ecosystem/docs/ROADMAP.md` Workstream Q. The daemon does not yet consume signaling-supplied peer hashes for production QUIC session establishment. Feature-gated behind `transport-quic` (not in default features).
+- **Status**: Production native↔native (app↔app) path in QUIC-enabled native builds.
+- **Current production path**: Native↔native product builds using the daemon `native-full` feature prefer QUIC when rendezvous signaling supplies complete `quicAddr` and `quicCertHash` metadata. WS client mode remains the required fallback.
+- **Transport authentication**: Mutual certificate-hash pinning. Each daemon presents an ephemeral self-signed QUIC certificate, shares the expected peer certificate hash through signaling, and fails closed on mismatch. `Rc3SkipVerification` / accept-any TLS verification is not reachable in the production app↔app QUIC path.
+- **Session lifecycle**: QUIC streams run the same session-key exchange, HELLO, ProfileEnvelopeV1, BTR file transfer, IPC lifecycle events, pairing trust checks, disconnect handling, and transfer events as WS.
+- **Feature flags**: `transport-quic` enables the daemon QUIC implementation; `native-full` enables WS + WT + QUIC for native app sidecars.
 - **Ordered delivery**: QUIC bidirectional streams provide ordered delivery natively.
 - **Reliability**: QUIC streams are reliable by default.
 - **Message framing**: Application-level length-prefix framing required (QUIC streams are byte-oriented).
 - **Backpressure**: QUIC flow control provides stream-level and connection-level backpressure.
-- **Graduation criteria**: APP-TO-APP-QUIC-MIGRATION-1 (bolt-ecosystem ROADMAP.md).
+- **Graduation evidence**: APP-TO-APP-QUIC-MIGRATION-1 Q1-Q5 complete in `bolt-ecosystem/docs/ROADMAP.md`: mutual pinning, structured signaling, app-session routing, IPC parity, native app packaging, two-device BTR smoke, WS fallback, pairing trust enforcement, disconnect propagation, and throughput comparison.
 
 ### WebTransport (HTTP/3)
 
@@ -122,15 +124,15 @@ The transport MUST expose at minimum:
 
 | Endpoint Pair | Transport | Status |
 |--------------|-----------|--------|
-| native↔native (app↔app) | WebSocket client mode | Production (current) |
-| native↔native (target) | QUIC via quinn (Rust) | Reference (RC3, strategic target) |
+| native↔native (app↔app) | QUIC via quinn (Rust) | Production |
+| native↔native (fallback) | WebSocket client mode | Fallback |
 | browser↔browser | WebRTC DataChannel | Production (G1 invariant — immutable) |
 | HTTPS web↔native | WebTransport (HTTP/3) | Production |
 | HTTP/localhost web↔native | WebSocket-direct | Supported (dev/LAN only) |
 
 **G1 invariant:** browser↔browser always uses WebRTC. This is not negotiable.
 
-**N1 invariant:** native↔native uses WS client mode today. QUIC is the strategic target but not yet production. See APP-TO-APP-QUIC-MIGRATION-1.
+**N1 invariant:** native↔native product builds prefer QUIC and retain WS client mode as fallback. See APP-TO-APP-QUIC-MIGRATION-1.
 
 ## 3. Binary Encoding Rule
 

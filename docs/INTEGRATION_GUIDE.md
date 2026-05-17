@@ -257,13 +257,23 @@ key derivation) from scratch. Use the canonical crates or `@the9ines/bolt-core`.
 
 | Endpoint Pair | Transport | Status |
 |--------------|-----------|--------|
-| native↔native (app↔app) | WebSocket client mode | Production (current) |
-| native↔native (target) | QUIC via quinn (Rust) | Reference (RC3, strategic target) |
+| native↔native (app↔app) | QUIC via quinn (Rust) | Production |
+| native↔native (fallback) | WebSocket client mode | Fallback |
 | browser↔browser | WebRTC DataChannel | Production (G1 invariant — immutable) |
 | HTTPS web↔native | WebTransport (HTTP/3) | Production |
 | HTTP/localhost web↔native | WebSocket-direct | Supported (dev/LAN only) |
 
 **G1 invariant:** browser↔browser always uses WebRTC. This is not negotiable.
+
+**Native↔native (QUIC)** is the production app-to-app path for native builds
+that enable the daemon `native-full` feature. Requirements:
+- Rendezvous signaling supplies complete `quicAddr` and `quicCertHash`
+  metadata
+- Daemons use mutual certificate-hash pinning and fail closed on mismatch
+- QUIC streams run the same HELLO, ProfileEnvelopeV1, BTR, pairing trust,
+  transfer IPC, and disconnect lifecycle as WS
+- WS client mode remains available as fallback when QUIC metadata is missing or
+  QUIC connection setup fails
 
 **HTTPS web↔native (WebTransport)** is the production path for browser-to-native
 communication over HTTPS origins. Requirements:
@@ -279,7 +289,7 @@ only. No TLS is required. This path applies when the browser origin is HTTP
 
 | Path | Why |
 |------|-----|
-| Native WebRTC (app↔app or app↔browser via WebRTC) | Native↔native currently uses WS client mode (QUIC is strategic target, RC3). Web↔native uses WebTransport. WebRTC is browser↔browser only. |
+| Native WebRTC (app↔app or app↔browser via WebRTC) | Native↔native uses QUIC with WS fallback. Web↔native uses WebTransport. WebRTC is browser↔browser only. |
 | HTTPS web → plain ws:// native | Mixed content — browsers block ws:// from HTTPS origins. Impossible. |
 | Raw QUIC from browsers | Browsers do not expose raw QUIC sockets; WebTransport is the browser QUIC surface |
 | UDP datagrams without reliability layer | Violates transport contract §1 (ordered + reliable required) |
