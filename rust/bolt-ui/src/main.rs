@@ -50,7 +50,10 @@ fn main() -> eframe::Result<()> {
         )
         .init();
 
-    tracing::info!("[BOLT_UI] starting LocalBolt Desktop v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!(
+        "[BOLT_UI] starting LocalBolt Desktop v{}",
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Start embedded signal server before UI
     start_embedded_signal_server();

@@ -80,7 +80,10 @@ fn generate_envelope_open_vectors() {
 fn all_core_vector_files_present() {
     let dir = vector_dir();
     let generators: Vec<(&str, fn() -> String)> = vec![
-        ("box-payload.vectors.json", vectors::generate_box_payload_json),
+        (
+            "box-payload.vectors.json",
+            vectors::generate_box_payload_json,
+        ),
         ("framing.vectors.json", vectors::generate_framing_json),
         ("sas.vectors.json", vectors::generate_sas_json),
         (

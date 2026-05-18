@@ -18,7 +18,11 @@ pub enum ConnectAction {
     SwitchMode(ConnectMode),
     CreateSession,
     StartHostWithJoiner(String),
-    StartJoin { room: String, session: String, peer_code: String },
+    StartJoin {
+        room: String,
+        session: String,
+        peer_code: String,
+    },
     Cancel,
 }
 
@@ -49,7 +53,11 @@ pub fn show(ui: &mut egui::Ui, state: &mut ConnectState<'_>) -> ConnectAction {
                 host_active,
                 egui::RichText::new("Host")
                     .size(theme::FONT_SIZE_HEADING)
-                    .color(if host_active { theme::ACCENT } else { theme::TEXT_SECONDARY }),
+                    .color(if host_active {
+                        theme::ACCENT
+                    } else {
+                        theme::TEXT_SECONDARY
+                    }),
             )
             .clicked()
             && can_switch
@@ -64,7 +72,11 @@ pub fn show(ui: &mut egui::Ui, state: &mut ConnectState<'_>) -> ConnectAction {
                 join_active,
                 egui::RichText::new("Join")
                     .size(theme::FONT_SIZE_HEADING)
-                    .color(if join_active { theme::ACCENT } else { theme::TEXT_SECONDARY }),
+                    .color(if join_active {
+                        theme::ACCENT
+                    } else {
+                        theme::TEXT_SECONDARY
+                    }),
             )
             .clicked()
             && can_switch
@@ -189,7 +201,9 @@ fn show_host(ui: &mut egui::Ui, state: &mut ConnectState<'_>) -> ConnectAction {
         if state.connection.can_cancel() {
             ui.add_space(theme::SPACING_MD);
             let cancel = egui::Button::new(
-                egui::RichText::new("Cancel").size(theme::FONT_SIZE_BODY).color(theme::TEXT_PRIMARY),
+                egui::RichText::new("Cancel")
+                    .size(theme::FONT_SIZE_BODY)
+                    .color(theme::TEXT_PRIMARY),
             )
             .fill(theme::ERROR)
             .corner_radius(theme::ROUNDING);
@@ -267,7 +281,9 @@ fn show_join(ui: &mut egui::Ui, state: &mut ConnectState<'_>) -> ConnectAction {
 
         if is_connecting {
             let cancel = egui::Button::new(
-                egui::RichText::new("Cancel").size(theme::FONT_SIZE_BODY).color(theme::TEXT_PRIMARY),
+                egui::RichText::new("Cancel")
+                    .size(theme::FONT_SIZE_BODY)
+                    .color(theme::TEXT_PRIMARY),
             )
             .fill(theme::ERROR)
             .corner_radius(theme::ROUNDING);
@@ -275,13 +291,17 @@ fn show_join(ui: &mut egui::Ui, state: &mut ConnectState<'_>) -> ConnectAction {
                 action = ConnectAction::Cancel;
             }
         } else {
-            let label = if state.connection.can_retry() && !matches!(state.connection, ConnectionState::Idle) {
+            let label = if state.connection.can_retry()
+                && !matches!(state.connection, ConnectionState::Idle)
+            {
                 "Retry"
             } else {
                 "Join"
             };
             let join_btn = egui::Button::new(
-                egui::RichText::new(label).size(theme::FONT_SIZE_BODY).color(theme::ACCENT_FG),
+                egui::RichText::new(label)
+                    .size(theme::FONT_SIZE_BODY)
+                    .color(theme::ACCENT_FG),
             )
             .fill(theme::ACCENT)
             .corner_radius(theme::ROUNDING);

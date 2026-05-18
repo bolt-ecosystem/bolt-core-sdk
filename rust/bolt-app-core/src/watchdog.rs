@@ -212,6 +212,12 @@ impl Watchdog {
     }
 }
 
+impl Default for Watchdog {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -406,7 +412,7 @@ mod tests {
 
         for cycle in 0..10 {
             // Connect
-            let t = w.on_daemon_ready();
+            let _t = w.on_daemon_ready();
             assert_eq!(
                 w.state(),
                 WatchdogState::Ready,

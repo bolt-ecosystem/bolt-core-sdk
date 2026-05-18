@@ -1,3 +1,5 @@
+#![cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+
 // EW2 measurement PoC — browser egui shell via WASM.
 //
 // EW-G9: measurement-only, no consumer app integration.
@@ -64,7 +66,10 @@ impl BoltWebApp {
                 self.host_info = Some(HostInfo {
                     peer_code,
                     room: format!("r{}", &self.local_peer_code[..4].to_lowercase()),
-                    session: format!("s{:08x}", web_time::Instant::now().elapsed().as_millis() as u32),
+                    session: format!(
+                        "s{:08x}",
+                        web_time::Instant::now().elapsed().as_millis() as u32
+                    ),
                 });
             }
             ConnectAction::StartHostWithJoiner(_code) => {
@@ -128,33 +133,31 @@ impl eframe::App for BoltWebApp {
         });
 
         // Main content
-        egui::CentralPanel::default().show(ctx, |ui| {
-            match self.current_screen {
-                Screen::Connect => {
-                    let mut connect_state = ConnectState {
-                        mode: self.mode,
-                        host_info: self.host_info.as_ref(),
-                        local_peer_code: &self.local_peer_code,
-                        join_room: &mut self.join_room,
-                        join_session: &mut self.join_session,
-                        join_peer_code: &mut self.join_peer_code,
-                        connection: &self.connection,
-                        prereq_error: None,
-                    };
-                    let action = screens::connect::show(ui, &mut connect_state);
-                    self.handle_connect_action(action);
-                }
-                Screen::Transfer => {
-                    screens::transfer::show(ui, &self.transfer);
-                }
-                Screen::Verify => {
-                    let mut action = VerifyAction::None;
-                    screens::verify::show(ui, &self.verify, &mut action);
-                    match action {
-                        VerifyAction::None => {}
-                        VerifyAction::Confirm => self.verify = VerifyState::Confirmed,
-                        VerifyAction::Reject => self.verify = VerifyState::Rejected,
-                    }
+        egui::CentralPanel::default().show(ctx, |ui| match self.current_screen {
+            Screen::Connect => {
+                let mut connect_state = ConnectState {
+                    mode: self.mode,
+                    host_info: self.host_info.as_ref(),
+                    local_peer_code: &self.local_peer_code,
+                    join_room: &mut self.join_room,
+                    join_session: &mut self.join_session,
+                    join_peer_code: &mut self.join_peer_code,
+                    connection: &self.connection,
+                    prereq_error: None,
+                };
+                let action = screens::connect::show(ui, &mut connect_state);
+                self.handle_connect_action(action);
+            }
+            Screen::Transfer => {
+                screens::transfer::show(ui, &self.transfer);
+            }
+            Screen::Verify => {
+                let mut action = VerifyAction::None;
+                screens::verify::show(ui, &self.verify, &mut action);
+                match action {
+                    VerifyAction::None => {}
+                    VerifyAction::Confirm => self.verify = VerifyState::Confirmed,
+                    VerifyAction::Reject => self.verify = VerifyState::Rejected,
                 }
             }
         });
@@ -167,8 +170,10 @@ impl eframe::App for BoltWebApp {
 }
 
 // WASM entry point
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub async fn start(canvas_id: &str) -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
@@ -180,9 +185,7 @@ pub async fn start(canvas_id: &str) -> Result<(), JsValue> {
     let canvas = document
         .get_element_by_id(canvas_id)
         .expect("canvas not found");
-    let canvas: web_sys::HtmlCanvasElement = canvas
-        .dyn_into()
-        .expect("element is not a canvas");
+    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into().expect("element is not a canvas");
 
     let web_options = eframe::WebOptions::default();
 

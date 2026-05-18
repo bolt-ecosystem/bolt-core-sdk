@@ -51,8 +51,7 @@ impl IpcBridgeCore {
 
     /// Establish persistent connection and start event forwarding.
     pub fn start(&self, socket_path: &Path, app_version: &str) -> Result<(), String> {
-        let stream =
-            IpcStream::connect(socket_path).map_err(|e| format!("bridge connect: {e}"))?;
+        let stream = IpcStream::connect(socket_path).map_err(|e| format!("bridge connect: {e}"))?;
         stream
             .set_read_timeout(Some(HANDSHAKE_TIMEOUT))
             .map_err(|e| format!("set_read_timeout: {e}"))?;
@@ -92,8 +91,8 @@ impl IpcBridgeCore {
         reader
             .read_line(&mut buf)
             .map_err(|e| format!("read version.status: {e}"))?;
-        let vs_msg: IpcMessage = serde_json::from_str(buf.trim())
-            .map_err(|e| format!("parse version.status: {e}"))?;
+        let vs_msg: IpcMessage =
+            serde_json::from_str(buf.trim()).map_err(|e| format!("parse version.status: {e}"))?;
         if vs_msg.msg_type != "version.status" || vs_msg.kind != IpcKind::Event {
             return Err(format!(
                 "expected version.status event, got {}:{:?}",
@@ -115,11 +114,14 @@ impl IpcBridgeCore {
         reader
             .read_line(&mut buf)
             .map_err(|e| format!("read daemon.status: {e}"))?;
-        let ds_msg: IpcMessage = serde_json::from_str(buf.trim())
-            .map_err(|e| format!("parse daemon.status: {e}"))?;
+        let ds_msg: IpcMessage =
+            serde_json::from_str(buf.trim()).map_err(|e| format!("parse daemon.status: {e}"))?;
         if ds_msg.msg_type == "daemon.status" {
             if let Ok(payload) = serde_json::from_value::<DaemonStatusPayload>(ds_msg.payload) {
-                self.emit_event("daemon://status-update", serde_json::to_value(&payload).unwrap_or_default());
+                self.emit_event(
+                    "daemon://status-update",
+                    serde_json::to_value(&payload).unwrap_or_default(),
+                );
                 tracing::info!(
                     "[IPC_BRIDGE] initial status: peers={}",
                     payload.connected_peers
@@ -200,7 +202,10 @@ impl IpcBridgeCore {
         match msg.msg_type.as_str() {
             "daemon.status" => {
                 if let Ok(payload) = serde_json::from_value::<DaemonStatusPayload>(msg.payload) {
-                    cb("daemon://status-update", serde_json::to_value(&payload).unwrap_or_default());
+                    cb(
+                        "daemon://status-update",
+                        serde_json::to_value(&payload).unwrap_or_default(),
+                    );
                 }
             }
             "pairing.request" => {
@@ -209,7 +214,10 @@ impl IpcBridgeCore {
                         "[IPC_BRIDGE] pairing request from {}",
                         payload.remote_device_name
                     );
-                    cb("daemon://pairing-request", serde_json::to_value(&payload).unwrap_or_default());
+                    cb(
+                        "daemon://pairing-request",
+                        serde_json::to_value(&payload).unwrap_or_default(),
+                    );
                 }
             }
             "transfer.incoming.request" => {
@@ -221,7 +229,10 @@ impl IpcBridgeCore {
                         payload.file_name,
                         payload.file_size_bytes
                     );
-                    cb("daemon://transfer-request", serde_json::to_value(&payload).unwrap_or_default());
+                    cb(
+                        "daemon://transfer-request",
+                        serde_json::to_value(&payload).unwrap_or_default(),
+                    );
                 }
             }
             // Session lifecycle events
@@ -270,6 +281,12 @@ impl IpcBridgeCore {
     pub fn shutdown(&self) {
         self.shutdown.store(true, Ordering::Relaxed);
         *self.writer.lock().unwrap() = None;
+    }
+}
+
+impl Default for IpcBridgeCore {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -197,11 +197,21 @@ pub fn apply_theme(ctx: &egui::Context) {
     // Monospace everywhere — retro terminal feel.
     use egui::FontId;
     use egui::TextStyle;
-    style.text_styles.insert(TextStyle::Body, FontId::monospace(FONT_SIZE_BODY));
-    style.text_styles.insert(TextStyle::Button, FontId::monospace(FONT_SIZE_BODY));
-    style.text_styles.insert(TextStyle::Heading, FontId::monospace(FONT_SIZE_HEADING));
-    style.text_styles.insert(TextStyle::Monospace, FontId::monospace(FONT_SIZE_MONO));
-    style.text_styles.insert(TextStyle::Small, FontId::monospace(FONT_SIZE_SMALL));
+    style
+        .text_styles
+        .insert(TextStyle::Body, FontId::monospace(FONT_SIZE_BODY));
+    style
+        .text_styles
+        .insert(TextStyle::Button, FontId::monospace(FONT_SIZE_BODY));
+    style
+        .text_styles
+        .insert(TextStyle::Heading, FontId::monospace(FONT_SIZE_HEADING));
+    style
+        .text_styles
+        .insert(TextStyle::Monospace, FontId::monospace(FONT_SIZE_MONO));
+    style
+        .text_styles
+        .insert(TextStyle::Small, FontId::monospace(FONT_SIZE_SMALL));
 
     ctx.set_style(style);
 }

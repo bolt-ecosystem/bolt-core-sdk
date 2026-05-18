@@ -28,12 +28,16 @@ pub fn find_daemon_binary() -> Result<PathBuf, String> {
     let extra_paths = vec![
         // Ecosystem workspace paths (bolt-ui is at bolt-core-sdk/rust/bolt-ui,
         // daemon is at bolt-ecosystem/bolt-daemon — 3 levels up from CARGO_MANIFEST_DIR)
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../bolt-daemon/target/release/bolt-daemon"),
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../bolt-daemon/target/debug/bolt-daemon"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../bolt-daemon/target/release/bolt-daemon"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../bolt-daemon/target/debug/bolt-daemon"),
         // Desktop deployment paths
         PathBuf::from(format!("{home}/Desktop/bolt-daemon")),
         // Explicit ecosystem paths
-        PathBuf::from(format!("{home}/Desktop/the9ines.com/bolt-ecosystem/bolt-daemon/target/release/bolt-daemon")),
+        PathBuf::from(format!(
+            "{home}/Desktop/the9ines.com/bolt-ecosystem/bolt-daemon/target/release/bolt-daemon"
+        )),
     ];
 
     for path in &extra_paths {
@@ -55,9 +59,8 @@ pub fn find_daemon_binary() -> Result<PathBuf, String> {
     // System PATH (via bolt-app-core shared resolution)
     let mut lifecycle = bolt_app_core::daemon_lifecycle::DaemonLifecycle::new("0.0.0");
     lifecycle.add_binary_search_paths(Vec::new());
-    match lifecycle.resolve_daemon_binary() {
-        Ok(p) => return Ok(p),
-        Err(_) => {}
+    if let Ok(p) = lifecycle.resolve_daemon_binary() {
+        return Ok(p);
     }
 
     Err("bolt-daemon binary not found. Build with: cd bolt-daemon && cargo build --release".into())
@@ -66,11 +69,11 @@ pub fn find_daemon_binary() -> Result<PathBuf, String> {
 /// Check if rendezvous server is reachable (quick TCP probe).
 /// Delegates to bolt-app-core signal_monitor probe logic.
 pub fn probe_rendezvous(url: &str) -> bool {
-    let addr = url
-        .trim_start_matches("ws://")
-        .trim_start_matches("wss://");
+    let addr = url.trim_start_matches("ws://").trim_start_matches("wss://");
     std::net::TcpStream::connect_timeout(
-        &addr.parse().unwrap_or_else(|_| "127.0.0.1:3001".parse().unwrap()),
+        &addr
+            .parse()
+            .unwrap_or_else(|_| "127.0.0.1:3001".parse().unwrap()),
         std::time::Duration::from_secs(2),
     )
     .is_ok()
@@ -88,6 +91,7 @@ pub fn find_rendezvous_binary() -> Option<PathBuf> {
 
 impl DaemonProcess {
     /// Spawn daemon as Host (answerer).
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn_host(
         daemon_bin: &PathBuf,
         peer_id: &str,
@@ -99,7 +103,8 @@ impl DaemonProcess {
         rendezvous_url: &str,
     ) -> Result<Self, String> {
         // Respect the URL as given — may be ws:// or wss://
-        let ws_url = if rendezvous_url.starts_with("ws://") || rendezvous_url.starts_with("wss://") {
+        let ws_url = if rendezvous_url.starts_with("ws://") || rendezvous_url.starts_with("wss://")
+        {
             rendezvous_url.to_string()
         } else {
             format!("ws://{rendezvous_url}")
@@ -107,22 +112,34 @@ impl DaemonProcess {
         Self::spawn(
             daemon_bin,
             &[
-                "--role", "answerer",
-                "--signal", "rendezvous",
-                "--rendezvous-url", &ws_url,
-                "--room", room,
-                "--session", session,
-                "--peer-id", peer_id,
-                "--expect-peer", expect_peer,
-                "--socket-path", socket_path,
-                "--data-dir", data_dir,
-                "--pairing-policy", "allow",
-                "--phase-timeout-secs", "3600",
+                "--role",
+                "answerer",
+                "--signal",
+                "rendezvous",
+                "--rendezvous-url",
+                &ws_url,
+                "--room",
+                room,
+                "--session",
+                session,
+                "--peer-id",
+                peer_id,
+                "--expect-peer",
+                expect_peer,
+                "--socket-path",
+                socket_path,
+                "--data-dir",
+                data_dir,
+                "--pairing-policy",
+                "allow",
+                "--phase-timeout-secs",
+                "3600",
             ],
         )
     }
 
     /// Spawn daemon as Join (offerer).
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn_join(
         daemon_bin: &PathBuf,
         peer_id: &str,
@@ -134,7 +151,8 @@ impl DaemonProcess {
         rendezvous_url: &str,
     ) -> Result<Self, String> {
         // Respect the URL as given — may be ws:// or wss://
-        let ws_url = if rendezvous_url.starts_with("ws://") || rendezvous_url.starts_with("wss://") {
+        let ws_url = if rendezvous_url.starts_with("ws://") || rendezvous_url.starts_with("wss://")
+        {
             rendezvous_url.to_string()
         } else {
             format!("ws://{rendezvous_url}")
@@ -142,17 +160,28 @@ impl DaemonProcess {
         Self::spawn(
             daemon_bin,
             &[
-                "--role", "offerer",
-                "--signal", "rendezvous",
-                "--rendezvous-url", &ws_url,
-                "--room", room,
-                "--session", session,
-                "--peer-id", peer_id,
-                "--to", to_peer,
-                "--socket-path", socket_path,
-                "--data-dir", data_dir,
-                "--pairing-policy", "allow",
-                "--phase-timeout-secs", "3600",
+                "--role",
+                "offerer",
+                "--signal",
+                "rendezvous",
+                "--rendezvous-url",
+                &ws_url,
+                "--room",
+                room,
+                "--session",
+                session,
+                "--peer-id",
+                peer_id,
+                "--to",
+                to_peer,
+                "--socket-path",
+                socket_path,
+                "--data-dir",
+                data_dir,
+                "--pairing-policy",
+                "allow",
+                "--phase-timeout-secs",
+                "3600",
             ],
         )
     }
@@ -168,11 +197,16 @@ impl DaemonProcess {
         Self::spawn(
             daemon_bin,
             &[
-                "--mode", "ws-endpoint",
-                "--ws-listen", ws_listen,
-                "--socket-path", socket_path,
-                "--data-dir", data_dir,
-                "--pairing-policy", "allow",
+                "--mode",
+                "ws-endpoint",
+                "--ws-listen",
+                ws_listen,
+                "--socket-path",
+                socket_path,
+                "--data-dir",
+                data_dir,
+                "--pairing-policy",
+                "allow",
             ],
         )
     }
@@ -251,18 +285,15 @@ impl DaemonProcess {
     }
 
     pub fn sas_code(&self) -> Option<String> {
-        self.stderr_lines
-            .lock()
-            .ok()
-            .and_then(|buf| {
-                buf.iter().find_map(|l| {
-                    if l.contains("[SAS]") {
-                        l.split("[SAS]").nth(1).map(|s| s.trim().to_string())
-                    } else {
-                        None
-                    }
-                })
+        self.stderr_lines.lock().ok().and_then(|buf| {
+            buf.iter().find_map(|l| {
+                if l.contains("[SAS]") {
+                    l.split("[SAS]").nth(1).map(|s| s.trim().to_string())
+                } else {
+                    None
+                }
             })
+        })
     }
 
     pub fn is_transfer_ready(&self) -> bool {
@@ -273,18 +304,15 @@ impl DaemonProcess {
     }
 
     pub fn last_error(&self) -> Option<String> {
-        self.stderr_lines
-            .lock()
-            .ok()
-            .and_then(|buf| {
-                buf.iter().rev().find_map(|l| {
-                    if l.contains("FATAL") || l.contains("ERROR") || l.contains("error") {
-                        Some(l.clone())
-                    } else {
-                        None
-                    }
-                })
+        self.stderr_lines.lock().ok().and_then(|buf| {
+            buf.iter().rev().find_map(|l| {
+                if l.contains("FATAL") || l.contains("ERROR") || l.contains("error") {
+                    Some(l.clone())
+                } else {
+                    None
+                }
             })
+        })
     }
 
     pub fn kill(&mut self) {

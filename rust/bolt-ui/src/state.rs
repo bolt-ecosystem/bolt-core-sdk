@@ -1,7 +1,5 @@
 use std::time::{Duration, Instant};
 
-/// Runtime state model for bolt-ui.
-
 pub const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
 
 // ── Discovered Peer ──────────────────────────────────────────
@@ -37,12 +35,12 @@ impl DeviceType {
     /// Retro icon glyph for device type.
     pub fn icon(&self) -> &str {
         match self {
-            Self::Desktop => "\u{25A3}",  // ▣
-            Self::Laptop => "\u{25A1}",   // □
-            Self::Phone => "\u{25AB}",    // ▫
-            Self::Tablet => "\u{25AD}",   // ▭
-            Self::Browser => "\u{25C7}",  // ◇
-            Self::Unknown => "\u{25CB}",  // ○
+            Self::Desktop => "\u{25A3}", // ▣
+            Self::Laptop => "\u{25A1}",  // □
+            Self::Phone => "\u{25AB}",   // ▫
+            Self::Tablet => "\u{25AD}",  // ▭
+            Self::Browser => "\u{25C7}", // ◇
+            Self::Unknown => "\u{25CB}", // ○
         }
     }
 }
@@ -78,9 +76,17 @@ pub enum ConnectionState {
     /// No connection, discovery running.
     Idle,
     /// Waiting for remote to accept.
-    Requesting { peer_code: String, peer_name: String, started_at: Instant },
+    Requesting {
+        peer_code: String,
+        peer_name: String,
+        started_at: Instant,
+    },
     /// Establishing transport (daemon spawning / WebRTC handshake).
-    Establishing { peer_code: String, peer_name: String, started_at: Instant },
+    Establishing {
+        peer_code: String,
+        peer_name: String,
+        started_at: Instant,
+    },
     /// Connected to peer.
     Connected,
     /// Connection timed out.
@@ -178,13 +184,25 @@ pub enum TransferState {
     Idle,
     Ready,
     #[allow(dead_code)]
-    Sending { file_name: String, progress: f32 },
+    Sending {
+        file_name: String,
+        progress: f32,
+    },
     #[allow(dead_code)]
-    Receiving { file_name: String, progress: f32 },
+    Receiving {
+        file_name: String,
+        progress: f32,
+    },
     #[allow(dead_code)]
-    Complete { file_name: String, save_path: Option<String> },
+    Complete {
+        file_name: String,
+        save_path: Option<String>,
+    },
     #[allow(dead_code)]
-    Failed { file_name: String, reason: String },
+    Failed {
+        file_name: String,
+        reason: String,
+    },
 }
 
 impl TransferState {
@@ -192,13 +210,22 @@ impl TransferState {
         match self {
             Self::Idle => "No active transfer".to_string(),
             Self::Ready => "Ready to transfer".to_string(),
-            Self::Sending { file_name, progress } => {
+            Self::Sending {
+                file_name,
+                progress,
+            } => {
                 format!("Sending {} ({:.0}%)", file_name, progress * 100.0)
             }
-            Self::Receiving { file_name, progress } => {
+            Self::Receiving {
+                file_name,
+                progress,
+            } => {
                 format!("Receiving {} ({:.0}%)", file_name, progress * 100.0)
             }
-            Self::Complete { file_name, save_path } => {
+            Self::Complete {
+                file_name,
+                save_path,
+            } => {
                 if let Some(path) = save_path {
                     format!("{} — saved to {}", file_name, path)
                 } else {
@@ -225,7 +252,9 @@ pub enum VerifyState {
     NotStarted,
     /// Legacy mode — no identity configured, transfer allowed immediately.
     Legacy,
-    Pending { sas_code: String },
+    Pending {
+        sas_code: String,
+    },
     Confirmed,
     Rejected,
 }

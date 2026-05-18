@@ -333,10 +333,8 @@ mod tests {
         let doc: serde_json::Value = serde_json::from_str(json_str).unwrap();
         let transitions = doc["session_transitions"].as_array().unwrap();
         for t in transitions {
-            let from: SessionPhase =
-                serde_json::from_value(t["from"].clone()).unwrap();
-            let to: SessionPhase =
-                serde_json::from_value(t["to"].clone()).unwrap();
+            let from: SessionPhase = serde_json::from_value(t["from"].clone()).unwrap();
+            let to: SessionPhase = serde_json::from_value(t["to"].clone()).unwrap();
             assert!(
                 is_valid_session_transition(from, to),
                 "JSON declares session transition {from:?} -> {to:?} but Rust rejects it"
@@ -350,10 +348,8 @@ mod tests {
         let doc: serde_json::Value = serde_json::from_str(json_str).unwrap();
         let transitions = doc["transfer_transitions"].as_array().unwrap();
         for t in transitions {
-            let from: TransferPhase =
-                serde_json::from_value(t["from"].clone()).unwrap();
-            let to: TransferPhase =
-                serde_json::from_value(t["to"].clone()).unwrap();
+            let from: TransferPhase = serde_json::from_value(t["from"].clone()).unwrap();
+            let to: TransferPhase = serde_json::from_value(t["to"].clone()).unwrap();
             assert!(
                 is_valid_transfer_transition(from, to),
                 "JSON declares transfer transition {from:?} -> {to:?} but Rust rejects it"
@@ -367,8 +363,7 @@ mod tests {
         let doc: serde_json::Value = serde_json::from_str(json_str).unwrap();
         let states = doc["verification_states"].as_array().unwrap();
         for s in states {
-            let id: VerificationState =
-                serde_json::from_value(s["id"].clone()).unwrap();
+            let id: VerificationState = serde_json::from_value(s["id"].clone()).unwrap();
             let allowed = s["transfer_allowed"].as_bool().unwrap();
             assert_eq!(
                 is_transfer_allowed(true, id),
@@ -386,32 +381,47 @@ mod tests {
 
         // Session phases
         let session_ids: Vec<SessionPhase> = doc["session_phases"]
-            .as_array().unwrap().iter()
+            .as_array()
+            .unwrap()
+            .iter()
             .map(|e| serde_json::from_value(e["id"].clone()).unwrap())
             .collect();
         assert_eq!(session_ids.len(), SESSION_PHASES.len());
         for phase in &SESSION_PHASES {
-            assert!(session_ids.contains(phase), "missing session phase: {phase:?}");
+            assert!(
+                session_ids.contains(phase),
+                "missing session phase: {phase:?}"
+            );
         }
 
         // Transfer phases
         let transfer_ids: Vec<TransferPhase> = doc["transfer_phases"]
-            .as_array().unwrap().iter()
+            .as_array()
+            .unwrap()
+            .iter()
             .map(|e| serde_json::from_value(e["id"].clone()).unwrap())
             .collect();
         assert_eq!(transfer_ids.len(), TRANSFER_PHASES.len());
         for phase in &TRANSFER_PHASES {
-            assert!(transfer_ids.contains(phase), "missing transfer phase: {phase:?}");
+            assert!(
+                transfer_ids.contains(phase),
+                "missing transfer phase: {phase:?}"
+            );
         }
 
         // Verification states
         let verification_ids: Vec<VerificationState> = doc["verification_states"]
-            .as_array().unwrap().iter()
+            .as_array()
+            .unwrap()
+            .iter()
             .map(|e| serde_json::from_value(e["id"].clone()).unwrap())
             .collect();
         assert_eq!(verification_ids.len(), VERIFICATION_STATES.len());
         for state in &VERIFICATION_STATES {
-            assert!(verification_ids.contains(state), "missing verification state: {state:?}");
+            assert!(
+                verification_ids.contains(state),
+                "missing verification state: {state:?}"
+            );
         }
     }
 
@@ -425,59 +435,89 @@ mod tests {
         let doc: serde_json::Value = serde_json::from_str(json_str).unwrap();
 
         // Session phases
-        let phases: Vec<String> = doc["session_phases"].as_array().unwrap()
-            .iter().map(|v| v.as_str().unwrap().to_string()).collect();
+        let phases: Vec<String> = doc["session_phases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap().to_string())
+            .collect();
         assert_eq!(phases.len(), SESSION_PHASES.len());
         for phase in &SESSION_PHASES {
             let s = serde_json::to_value(phase).unwrap();
             let name = s.as_str().unwrap();
-            assert!(phases.contains(&name.to_string()), "missing session phase: {name}");
+            assert!(
+                phases.contains(&name.to_string()),
+                "missing session phase: {name}"
+            );
         }
 
         // Session transitions: every pair in fixture must be legal, and count must match
-        let legal: Vec<(String, String)> = doc["session_transitions_legal"].as_array().unwrap()
-            .iter().map(|pair| {
+        let legal: Vec<(String, String)> = doc["session_transitions_legal"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|pair| {
                 let arr = pair.as_array().unwrap();
-                (arr[0].as_str().unwrap().to_string(), arr[1].as_str().unwrap().to_string())
-            }).collect();
+                (
+                    arr[0].as_str().unwrap().to_string(),
+                    arr[1].as_str().unwrap().to_string(),
+                )
+            })
+            .collect();
         for (from_s, to_s) in &legal {
-            let from: SessionPhase = serde_json::from_value(
-                serde_json::Value::String(from_s.clone())).unwrap();
-            let to: SessionPhase = serde_json::from_value(
-                serde_json::Value::String(to_s.clone())).unwrap();
+            let from: SessionPhase =
+                serde_json::from_value(serde_json::Value::String(from_s.clone())).unwrap();
+            let to: SessionPhase =
+                serde_json::from_value(serde_json::Value::String(to_s.clone())).unwrap();
             assert!(
                 is_valid_session_transition(from, to),
                 "fixture declares {from_s} -> {to_s} legal but Rust rejects it"
             );
         }
-        assert_eq!(legal.len(), 9, "fixture must declare exactly 9 legal session transitions");
+        assert_eq!(
+            legal.len(),
+            9,
+            "fixture must declare exactly 9 legal session transitions"
+        );
 
         // Transfer transitions
-        let t_legal: Vec<(String, String)> = doc["transfer_transitions_legal"].as_array().unwrap()
-            .iter().map(|pair| {
+        let t_legal: Vec<(String, String)> = doc["transfer_transitions_legal"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|pair| {
                 let arr = pair.as_array().unwrap();
-                (arr[0].as_str().unwrap().to_string(), arr[1].as_str().unwrap().to_string())
-            }).collect();
+                (
+                    arr[0].as_str().unwrap().to_string(),
+                    arr[1].as_str().unwrap().to_string(),
+                )
+            })
+            .collect();
         for (from_s, to_s) in &t_legal {
-            let from: TransferPhase = serde_json::from_value(
-                serde_json::Value::String(from_s.clone())).unwrap();
-            let to: TransferPhase = serde_json::from_value(
-                serde_json::Value::String(to_s.clone())).unwrap();
+            let from: TransferPhase =
+                serde_json::from_value(serde_json::Value::String(from_s.clone())).unwrap();
+            let to: TransferPhase =
+                serde_json::from_value(serde_json::Value::String(to_s.clone())).unwrap();
             assert!(
                 is_valid_transfer_transition(from, to),
                 "fixture declares {from_s} -> {to_s} legal but Rust rejects it"
             );
         }
-        assert_eq!(t_legal.len(), 10, "fixture must declare exactly 10 legal transfer transitions");
+        assert_eq!(
+            t_legal.len(),
+            10,
+            "fixture must declare exactly 10 legal transfer transitions"
+        );
 
         // Transfer gating
         let gating = doc["transfer_gating"].as_object().unwrap();
         for (state_s, allowed_v) in gating {
-            let state: VerificationState = serde_json::from_value(
-                serde_json::Value::String(state_s.clone())).unwrap();
+            let state: VerificationState =
+                serde_json::from_value(serde_json::Value::String(state_s.clone())).unwrap();
             let allowed = allowed_v.as_bool().unwrap();
             assert_eq!(
-                is_transfer_allowed(true, state), allowed,
+                is_transfer_allowed(true, state),
+                allowed,
                 "fixture says {state_s} -> {allowed} but Rust disagrees"
             );
         }

@@ -213,8 +213,10 @@ fn show_connected(ui: &mut egui::Ui, app: &mut BoltApp) {
     let (name, icon) = {
         let cp = app.connected_peer.as_ref();
         (
-            cp.map(|p| p.device_name.clone()).unwrap_or_else(|| "Peer".into()),
-            cp.map(|p| p.device_type.icon().to_string()).unwrap_or_else(|| "\u{25CB}".into()),
+            cp.map(|p| p.device_name.clone())
+                .unwrap_or_else(|| "Peer".into()),
+            cp.map(|p| p.device_type.icon().to_string())
+                .unwrap_or_else(|| "\u{25CB}".into()),
         )
     };
 
@@ -319,7 +321,8 @@ fn show_connected(ui: &mut egui::Ui, app: &mut BoltApp) {
                 ui.add_space(theme::SPACING_SM);
                 if ui.add(theme::primary_button("SEND FILE")).clicked() {
                     if let Some(path) = rfd::FileDialog::new().pick_file() {
-                        let file_name = path.file_name()
+                        let file_name = path
+                            .file_name()
                             .map(|n| n.to_string_lossy().to_string())
                             .unwrap_or_else(|| "file".into());
                         let path_str = path.display().to_string();
@@ -346,7 +349,10 @@ fn show_connected(ui: &mut egui::Ui, app: &mut BoltApp) {
                     }
                 }
             }
-            TransferState::Sending { file_name, progress } => {
+            TransferState::Sending {
+                file_name,
+                progress,
+            } => {
                 theme::section_label(ui, "sending");
                 theme::field_row(ui, "File", file_name);
                 ui.add(
@@ -355,7 +361,10 @@ fn show_connected(ui: &mut egui::Ui, app: &mut BoltApp) {
                         .desired_width(320.0),
                 );
             }
-            TransferState::Receiving { file_name, progress } => {
+            TransferState::Receiving {
+                file_name,
+                progress,
+            } => {
                 theme::section_label(ui, "receiving");
                 theme::field_row(ui, "File", file_name);
                 ui.add(
@@ -364,7 +373,10 @@ fn show_connected(ui: &mut egui::Ui, app: &mut BoltApp) {
                         .desired_width(320.0),
                 );
             }
-            TransferState::Complete { file_name, save_path } => {
+            TransferState::Complete {
+                file_name,
+                save_path,
+            } => {
                 ui.label(
                     egui::RichText::new(format!("\u{2713} {} — complete", file_name))
                         .size(theme::FONT_SIZE_BODY)
@@ -428,7 +440,11 @@ fn show_manual_pair(ui: &mut egui::Ui, app: &mut BoltApp) {
         ui.horizontal(|ui| {
             for (mode, label) in [(ConnectMode::Host, "HOST"), (ConnectMode::Join, "JOIN")] {
                 let active = app.mode == mode;
-                let color = if active { theme::ACCENT } else { theme::TEXT_MUTED };
+                let color = if active {
+                    theme::ACCENT
+                } else {
+                    theme::TEXT_MUTED
+                };
                 if ui
                     .selectable_label(
                         active,
@@ -446,13 +462,16 @@ fn show_manual_pair(ui: &mut egui::Ui, app: &mut BoltApp) {
 
         match app.mode {
             ConnectMode::Host => {
-                if app.host_info.is_none() && app.connection == ConnectionState::Idle {
-                    if ui
-                        .add_enabled(app.prereq_error.is_none(), theme::primary_button("CREATE SESSION"))
+                if app.host_info.is_none()
+                    && app.connection == ConnectionState::Idle
+                    && ui
+                        .add_enabled(
+                            app.prereq_error.is_none(),
+                            theme::primary_button("CREATE SESSION"),
+                        )
                         .clicked()
-                    {
-                        app.start_host();
-                    }
+                {
+                    app.start_host();
                 }
                 if let Some(info) = &app.host_info {
                     theme::field_row(ui, "Room", &info.room);
@@ -470,8 +489,12 @@ fn show_manual_pair(ui: &mut egui::Ui, app: &mut BoltApp) {
                                 .char_limit(bolt_core::constants::PEER_CODE_LENGTH),
                         );
                         app.join_peer_code = joiner;
-                        let ready = app.join_peer_code.len() == bolt_core::constants::PEER_CODE_LENGTH;
-                        if ui.add_enabled(ready, theme::primary_button("START")).clicked() {
+                        let ready =
+                            app.join_peer_code.len() == bolt_core::constants::PEER_CODE_LENGTH;
+                        if ui
+                            .add_enabled(ready, theme::primary_button("START"))
+                            .clicked()
+                        {
                             let code = app.join_peer_code.clone();
                             app.start_host_with_joiner(&code);
                         }
@@ -518,7 +541,10 @@ fn show_manual_pair(ui: &mut egui::Ui, app: &mut BoltApp) {
                     && !app.join_session.is_empty()
                     && !app.join_peer_code.is_empty()
                     && app.prereq_error.is_none();
-                if ui.add_enabled(ready, theme::primary_button("JOIN")).clicked() {
+                if ui
+                    .add_enabled(ready, theme::primary_button("JOIN"))
+                    .clicked()
+                {
                     app.start_join();
                 }
             }

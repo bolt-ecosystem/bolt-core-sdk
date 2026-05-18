@@ -29,8 +29,7 @@ impl IpcClient {
     /// Uses bolt-app-core cross-platform IPC transport (Unix socket / Windows pipe).
     pub fn connect(socket_path: &str) -> Result<Self, String> {
         let path = std::path::Path::new(socket_path);
-        let stream = IpcStream::connect(path)
-            .map_err(|e| format!("IPC connect failed: {e}"))?;
+        let stream = IpcStream::connect(path).map_err(|e| format!("IPC connect failed: {e}"))?;
 
         stream
             .set_read_timeout(Some(HANDSHAKE_TIMEOUT))
@@ -43,9 +42,12 @@ impl IpcClient {
             "version.handshake",
             serde_json::to_value(VersionHandshakePayload {
                 app_version: APP_VERSION.to_string(),
-            }).unwrap(),
+            })
+            .unwrap(),
         );
-        let line = handshake.to_ndjson().map_err(|e| format!("serialize: {e}"))?;
+        let line = handshake
+            .to_ndjson()
+            .map_err(|e| format!("serialize: {e}"))?;
         writer
             .write_all(line.as_bytes())
             .map_err(|e| format!("write handshake: {e}"))?;
@@ -65,8 +67,8 @@ impl IpcClient {
             return Err(format!("expected version.status, got {}", status.msg_type));
         }
 
-        let vs: VersionStatusPayload = serde_json::from_value(status.payload)
-            .map_err(|e| format!("parse payload: {e}"))?;
+        let vs: VersionStatusPayload =
+            serde_json::from_value(status.payload).map_err(|e| format!("parse payload: {e}"))?;
         if !vs.compatible {
             return Err("daemon version incompatible".into());
         }
@@ -79,20 +81,18 @@ impl IpcClient {
 
         // Start event reader thread
         let (tx, rx) = mpsc::channel();
-        let reader_thread = thread::spawn(move || {
-            loop {
-                let mut line = String::new();
-                match reader.read_line(&mut line) {
-                    Ok(0) => break,
-                    Ok(_) => {
-                        if let Ok(event) = serde_json::from_str::<IpcMessage>(line.trim()) {
-                            if tx.send(event).is_err() {
-                                break;
-                            }
+        let reader_thread = thread::spawn(move || loop {
+            let mut line = String::new();
+            match reader.read_line(&mut line) {
+                Ok(0) => break,
+                Ok(_) => {
+                    if let Ok(event) = serde_json::from_str::<IpcMessage>(line.trim()) {
+                        if tx.send(event).is_err() {
+                            break;
                         }
                     }
-                    Err(_) => break,
                 }
+                Err(_) => break,
             }
         });
 

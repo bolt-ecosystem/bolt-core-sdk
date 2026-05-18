@@ -376,11 +376,7 @@ impl WasmSendSession {
             &"totalChunks".into(),
             &JsValue::from(offer.total_chunks),
         )?;
-        js_sys::Reflect::set(
-            &obj,
-            &"chunkSize".into(),
-            &JsValue::from(offer.chunk_size),
-        )?;
+        js_sys::Reflect::set(&obj, &"chunkSize".into(), &JsValue::from(offer.chunk_size))?;
         if let Some(h) = &offer.file_hash {
             js_sys::Reflect::set(&obj, &"fileHash".into(), &h.into())?;
         }
@@ -432,21 +428,9 @@ impl WasmSendSession {
             Some(c) => {
                 let obj = js_sys::Object::new();
                 js_sys::Reflect::set(&obj, &"transferId".into(), &c.transfer_id.into())?;
-                js_sys::Reflect::set(
-                    &obj,
-                    &"chunkIndex".into(),
-                    &JsValue::from(c.chunk_index),
-                )?;
-                js_sys::Reflect::set(
-                    &obj,
-                    &"totalChunks".into(),
-                    &JsValue::from(c.total_chunks),
-                )?;
-                js_sys::Reflect::set(
-                    &obj,
-                    &"data".into(),
-                    &js_sys::Uint8Array::from(&c.data[..]),
-                )?;
+                js_sys::Reflect::set(&obj, &"chunkIndex".into(), &JsValue::from(c.chunk_index))?;
+                js_sys::Reflect::set(&obj, &"totalChunks".into(), &JsValue::from(c.total_chunks))?;
+                js_sys::Reflect::set(&obj, &"data".into(), &js_sys::Uint8Array::from(&c.data[..]))?;
                 Ok(obj.into())
             }
         }
@@ -468,6 +452,12 @@ impl WasmSendSession {
     #[wasm_bindgen(js_name = "isSendActive")]
     pub fn is_send_active(&self) -> bool {
         self.inner.is_send_active()
+    }
+}
+
+impl Default for WasmSendSession {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -495,18 +485,10 @@ mod tests {
     fn keypair_roundtrip() {
         let kp = bolt_core::crypto::generate_ephemeral_keypair();
         let plaintext = b"RB3 test";
-        let sealed = bolt_core::crypto::seal_box_payload(
-            plaintext,
-            &kp.public_key,
-            &kp.secret_key,
-        )
-        .unwrap();
-        let opened = bolt_core::crypto::open_box_payload(
-            &sealed,
-            &kp.public_key,
-            &kp.secret_key,
-        )
-        .unwrap();
+        let sealed =
+            bolt_core::crypto::seal_box_payload(plaintext, &kp.public_key, &kp.secret_key).unwrap();
+        let opened =
+            bolt_core::crypto::open_box_payload(&sealed, &kp.public_key, &kp.secret_key).unwrap();
         assert_eq!(opened, plaintext);
     }
 
@@ -649,11 +631,16 @@ mod tests {
         let us_per_call = elapsed.as_micros() as f64 / n as f64;
         let throughput = (16384.0 * n as f64) / elapsed.as_secs_f64() / 1048576.0;
 
-        eprintln!("[RB4-BENCH] seal_chunk: {us_per_call:.1} μs/call, {throughput:.1} MiB/s ({n}x 16KiB)");
+        eprintln!(
+            "[RB4-BENCH] seal_chunk: {us_per_call:.1} μs/call, {throughput:.1} MiB/s ({n}x 16KiB)"
+        );
 
         // Sanity: must be faster than 5ms/call even in debug mode.
         // Release mode target: <100 μs/call. Measured: ~42 μs (native release).
-        assert!(us_per_call < 5000.0, "seal_chunk too slow: {us_per_call:.1} μs");
+        assert!(
+            us_per_call < 5000.0,
+            "seal_chunk too slow: {us_per_call:.1} μs"
+        );
     }
 
     // ── RB3: Crypto tests ──

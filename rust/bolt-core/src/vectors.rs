@@ -606,9 +606,12 @@ pub fn generate_envelope_open_json() -> String {
     let plain_app = serde_json::to_string(&app_msg_inner).unwrap();
 
     // Seal inner messages
-    let sealed_ping = seal_with_fixed_nonce(plain_ping.as_bytes(), &nonce_c, &receiver_pk, &sender_sk);
-    let sealed_pong = seal_with_fixed_nonce(plain_pong.as_bytes(), &nonce_d, &sender_pk, &receiver_sk);
-    let sealed_app = seal_with_fixed_nonce(plain_app.as_bytes(), &nonce_f, &receiver_pk, &sender_sk);
+    let sealed_ping =
+        seal_with_fixed_nonce(plain_ping.as_bytes(), &nonce_c, &receiver_pk, &sender_sk);
+    let sealed_pong =
+        seal_with_fixed_nonce(plain_pong.as_bytes(), &nonce_d, &sender_pk, &receiver_sk);
+    let sealed_app =
+        seal_with_fixed_nonce(plain_app.as_bytes(), &nonce_f, &receiver_pk, &sender_sk);
 
     let data = EnvelopeOpenVectors {
         version: 1,

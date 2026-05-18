@@ -77,10 +77,16 @@ impl TransferState {
         match self {
             Self::Idle => "No active transfer".to_string(),
             Self::Ready => "Connected — ready to transfer".to_string(),
-            Self::Sending { file_name, progress } => {
+            Self::Sending {
+                file_name,
+                progress,
+            } => {
                 format!("Sending {} ({:.0}%)", file_name, progress * 100.0)
             }
-            Self::Receiving { file_name, progress } => {
+            Self::Receiving {
+                file_name,
+                progress,
+            } => {
                 format!("Receiving {} ({:.0}%)", file_name, progress * 100.0)
             }
             Self::Complete { file_name } => format!("{} — complete", file_name),

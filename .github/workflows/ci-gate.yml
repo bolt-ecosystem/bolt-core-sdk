@@ -12,8 +12,36 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # Repository shape detection
+  # The SDK main branch is Rust-only unless TS package directories are present.
+  # Push events run without path-filter outputs, so guard TS jobs explicitly.
+  # ---------------------------------------------------------------------------
+  repo-shape:
+    name: Detect repository shape
+    runs-on: ubuntu-latest
+    outputs:
+      bolt_core_ts_present: ${{ steps.shape.outputs.bolt_core_ts_present }}
+      transport_web_present: ${{ steps.shape.outputs.transport_web_present }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - id: shape
+        run: |
+          if [ -f ts/bolt-core/package.json ]; then
+            echo "bolt_core_ts_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bolt_core_ts_present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -f ts/bolt-transport-web/package.json ]; then
+            echo "transport_web_present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "transport_web_present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ---------------------------------------------------------------------------
   # Path-based change detection (PR only)
-  # On push to main, downstream jobs run unconditionally via always() guard.
+  # On push to main, Rust runs unconditionally; TS jobs also require tracked TS
+  # package directories from repo-shape.
   # ---------------------------------------------------------------------------
   changes:
     name: Detect changed areas
@@ -80,9 +108,12 @@ jobs:
   # ---------------------------------------------------------------------------
   bolt-core-ts:
     name: bolt-core TS build + test
-    needs: changes
+    needs:
+      - changes
+      - repo-shape
     if: >-
       always() &&
+      needs.repo-shape.outputs.bolt_core_ts_present == 'true' &&
       (github.event_name == 'push' || needs.changes.outputs.bolt_core_ts == 'true')
     runs-on: ubuntu-latest
     defaults:
@@ -115,9 +146,12 @@ jobs:
   # ---------------------------------------------------------------------------
   transport-web:
     name: transport-web build + test
-    needs: changes
+    needs:
+      - changes
+      - repo-shape
     if: >-
       always() &&
+      needs.repo-shape.outputs.transport_web_present == 'true' &&
       (github.event_name == 'push' || needs.changes.outputs.transport_web == 'true')
     runs-on: ubuntu-latest
     steps:

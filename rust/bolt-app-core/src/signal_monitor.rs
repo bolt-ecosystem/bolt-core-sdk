@@ -141,10 +141,7 @@ pub type SignalStatusCallback = Box<dyn Fn(SignalStatusEvent) + Send + 'static>;
 ///
 /// Probes every 5 seconds, calling `on_transition` on status changes.
 /// Shell implementations wire this to their event system (Tauri emit, egui state, etc.).
-pub fn start_signal_monitor(
-    shutdown_flag: Arc<AtomicBool>,
-    on_transition: SignalStatusCallback,
-) {
+pub fn start_signal_monitor(shutdown_flag: Arc<AtomicBool>, on_transition: SignalStatusCallback) {
     std::thread::spawn(move || {
         let mut monitor = SignalMonitor::new(shutdown_flag.clone());
 

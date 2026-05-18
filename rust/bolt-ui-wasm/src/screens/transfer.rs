@@ -73,7 +73,10 @@ pub fn show(ui: &mut egui::Ui, transfer: &TransferState) {
                                 .color(theme::SUCCESS),
                         );
                     }
-                    TransferState::Sending { file_name, progress } => {
+                    TransferState::Sending {
+                        file_name,
+                        progress,
+                    } => {
                         ui.label(
                             egui::RichText::new(format!("\u{2191} {}", file_name))
                                 .size(theme::FONT_SIZE_BODY)
@@ -85,7 +88,10 @@ pub fn show(ui: &mut egui::Ui, transfer: &TransferState) {
                                 .color(theme::TEXT_SECONDARY),
                         );
                     }
-                    TransferState::Receiving { file_name, progress } => {
+                    TransferState::Receiving {
+                        file_name,
+                        progress,
+                    } => {
                         ui.label(
                             egui::RichText::new(format!("\u{2193} {}", file_name))
                                 .size(theme::FONT_SIZE_BODY)

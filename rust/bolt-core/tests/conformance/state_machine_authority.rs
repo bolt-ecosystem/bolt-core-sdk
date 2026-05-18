@@ -62,7 +62,11 @@ fn authority_cancel_reasons_complete() {
         CancelReason::ByReceiver,
         CancelReason::Rejected,
     ];
-    assert_eq!(reasons.len(), 3, "3 cancel reasons: sender, receiver, rejected");
+    assert_eq!(
+        reasons.len(),
+        3,
+        "3 cancel reasons: sender, receiver, rejected"
+    );
 }
 
 /// AC-RC-10: SendSession enforces invalid transitions (not just flag-based).
@@ -135,9 +139,7 @@ fn authority_btr_chain_index_rejects_skip() {
     let mut engine = BtrEngine::new(&shared_secret);
     let tid: [u8; 16] = [0x10; 16];
 
-    let (mut ctx, _pub) = engine
-        .begin_transfer_send(&tid, &[0x02; 32])
-        .unwrap();
+    let (mut ctx, _pub) = engine.begin_transfer_send(&tid, &[0x02; 32]).unwrap();
 
     // Seal chunk 0 to advance chain.
     let (idx0, sealed0) = ctx.seal_chunk(b"chunk-0").unwrap();
@@ -190,9 +192,15 @@ fn authority_backpressure_hysteresis() {
 
     struct MockTransport(usize);
     impl bolt_transfer_core::TransportQuery for MockTransport {
-        fn is_open(&self) -> bool { true }
-        fn buffered_bytes(&self) -> usize { self.0 }
-        fn max_message_size(&self) -> usize { 65536 }
+        fn is_open(&self) -> bool {
+            true
+        }
+        fn buffered_bytes(&self) -> usize {
+            self.0
+        }
+        fn max_message_size(&self) -> usize {
+            65536
+        }
     }
 
     let config = BackpressureConfig::new(100, 25);

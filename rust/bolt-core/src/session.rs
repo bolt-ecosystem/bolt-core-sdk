@@ -230,12 +230,22 @@ mod tests {
     #[test]
     fn hello_error_codes_are_canonical() {
         use crate::errors::is_valid_wire_error_code;
-        assert!(is_valid_wire_error_code(HelloError::ParseError("".into()).code()));
-        assert!(is_valid_wire_error_code(HelloError::DecryptFail("".into()).code()));
-        assert!(is_valid_wire_error_code(HelloError::SchemaError("".into()).code()));
-        assert!(is_valid_wire_error_code(HelloError::KeyMismatch("".into()).code()));
+        assert!(is_valid_wire_error_code(
+            HelloError::ParseError("".into()).code()
+        ));
+        assert!(is_valid_wire_error_code(
+            HelloError::DecryptFail("".into()).code()
+        ));
+        assert!(is_valid_wire_error_code(
+            HelloError::SchemaError("".into()).code()
+        ));
+        assert!(is_valid_wire_error_code(
+            HelloError::KeyMismatch("".into()).code()
+        ));
         assert!(is_valid_wire_error_code(HelloError::DuplicateHello.code()));
-        assert!(is_valid_wire_error_code(HelloError::DowngradeAttempt.code()));
+        assert!(is_valid_wire_error_code(
+            HelloError::DowngradeAttempt.code()
+        ));
     }
 
     #[test]

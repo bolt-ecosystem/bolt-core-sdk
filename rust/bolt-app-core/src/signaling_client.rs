@@ -224,7 +224,7 @@ pub fn spawn_signaling_client(
             // Return handle that sends to both local and cloud
             return SignalingHandle {
                 shutdown,
-                send_tx: send_tx, // local gets original send_rx
+                send_tx, // local gets original send_rx
                 cloud_send_tx: Some(cloud_tx),
             };
         }
@@ -260,11 +260,12 @@ fn run_signaling_client(
     send_rx: std::sync::mpsc::Receiver<OutboundSignal>,
     plane: Plane,
 ) {
-    let ws_url = if config.server_url.starts_with("ws://") || config.server_url.starts_with("wss://") {
-        config.server_url.clone()
-    } else {
-        format!("ws://{}", config.server_url)
-    };
+    let ws_url =
+        if config.server_url.starts_with("ws://") || config.server_url.starts_with("wss://") {
+            config.server_url.clone()
+        } else {
+            format!("ws://{}", config.server_url)
+        };
 
     loop {
         if shutdown.load(Ordering::Relaxed) {
@@ -290,9 +291,14 @@ fn run_signaling_client(
                     wt_url: config.wt_url.clone(),
                     wt_cert_hash: config.wt_cert_hash.clone(),
                 };
-                if let Err(e) = socket.send(Message::Text(serde_json::to_string(&register).unwrap())) {
+                if let Err(e) =
+                    socket.send(Message::Text(serde_json::to_string(&register).unwrap()))
+                {
                     tracing::warn!("[SIGNALING] register failed: {e}");
-                    on_event(DiscoveryEvent::Disconnected(format!("register: {e}"), plane));
+                    on_event(DiscoveryEvent::Disconnected(
+                        format!("register: {e}"),
+                        plane,
+                    ));
                     reconnect_delay(&shutdown);
                     continue;
                 }
@@ -348,7 +354,9 @@ fn run_signaling_client(
                             to: cmd.to.clone(),
                             payload,
                         };
-                        if let Err(e) = socket.send(Message::Text(serde_json::to_string(&msg).unwrap())) {
+                        if let Err(e) =
+                            socket.send(Message::Text(serde_json::to_string(&msg).unwrap()))
+                        {
                             tracing::warn!("[SIGNALING] send signal failed: {e}");
                             break;
                         }
@@ -404,11 +412,14 @@ fn dispatch_message(msg: &ServerMsg, on_event: &DiscoveryCallback, plane: Plane)
                     .cloned()
                     .unwrap_or(serde_json::Value::Null);
 
-                on_event(DiscoveryEvent::Signal(InboundSignal {
-                    from: from.clone(),
-                    signal_type,
-                    data,
-                }, plane));
+                on_event(DiscoveryEvent::Signal(
+                    InboundSignal {
+                        from: from.clone(),
+                        signal_type,
+                        data,
+                    },
+                    plane,
+                ));
             }
         }
         "error" => {

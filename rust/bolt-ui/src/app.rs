@@ -208,7 +208,10 @@ impl BoltApp {
             signal_type: "connection_request".into(),
         });
 
-        tracing::info!("[UI] daemon spawning, will send connection_request to {} when WS ready", peer.peer_code);
+        tracing::info!(
+            "[UI] daemon spawning, will send connection_request to {} when WS ready",
+            peer.peer_code
+        );
     }
 
     /// Wait for the daemon WS endpoint to be listening (max 5s).
@@ -218,7 +221,11 @@ impl BoltApp {
         let deadline = Instant::now() + std::time::Duration::from_secs(5);
         while Instant::now() < deadline {
             if let Some(ref proc) = self.daemon_proc {
-                if proc.recent_stderr(30).iter().any(|l| l.contains("[WS_ENDPOINT] listening")) {
+                if proc
+                    .recent_stderr(30)
+                    .iter()
+                    .any(|l| l.contains("[WS_ENDPOINT] listening"))
+                {
                     return true;
                 }
             }
@@ -274,7 +281,9 @@ impl BoltApp {
     /// Used for manual pairing / rendezvous fallback path.
     #[allow(dead_code)]
     fn resolve_signal_url_for_peer(&self, peer_code: &str) -> String {
-        let peer_plane = self.discovered_peers.iter()
+        let peer_plane = self
+            .discovered_peers
+            .iter()
             .find(|p| p.peer_code == peer_code)
             .map(|p| &p.plane);
 
@@ -301,7 +310,13 @@ impl BoltApp {
 
     /// Spawn daemon with an explicit signaling URL (rendezvous fallback).
     #[allow(dead_code)]
-    fn spawn_daemon_with_url(&mut self, peer_code: &str, peer_name: &str, is_offerer: bool, signal_url: &str) {
+    fn spawn_daemon_with_url(
+        &mut self,
+        peer_code: &str,
+        peer_name: &str,
+        is_offerer: bool,
+        signal_url: &str,
+    ) {
         let daemon_bin = match &self.daemon_bin {
             Some(b) => b.clone(),
             None => {
@@ -328,7 +343,7 @@ impl BoltApp {
                 &session,
                 &self.socket_path,
                 &self.data_dir,
-                &signal_url,
+                signal_url,
             )
         } else {
             DaemonProcess::spawn_host(
@@ -339,7 +354,7 @@ impl BoltApp {
                 &session,
                 &self.socket_path,
                 &self.data_dir,
-                &signal_url,
+                signal_url,
             )
         };
 
@@ -392,7 +407,9 @@ impl BoltApp {
             device_type: req.device_type,
         });
 
-        tracing::info!("[UI] accepted — daemon spawning, will send connection_accepted when WS ready");
+        tracing::info!(
+            "[UI] accepted — daemon spawning, will send connection_accepted when WS ready"
+        );
     }
 
     /// Decline an incoming connection request.
@@ -435,9 +452,10 @@ impl BoltApp {
         };
 
         if !daemon::probe_rendezvous(&rendezvous_addr()) {
-            self.connection = ConnectionState::Error(
-                format!("Signal server unreachable at {}", rendezvous_addr()),
-            );
+            self.connection = ConnectionState::Error(format!(
+                "Signal server unreachable at {}",
+                rendezvous_addr()
+            ));
             return;
         }
 
@@ -508,9 +526,10 @@ impl BoltApp {
         };
 
         if !daemon::probe_rendezvous(&rendezvous_addr()) {
-            self.connection = ConnectionState::Error(
-                format!("Signal server unreachable at {}", rendezvous_addr()),
-            );
+            self.connection = ConnectionState::Error(format!(
+                "Signal server unreachable at {}",
+                rendezvous_addr()
+            ));
             return;
         }
 
@@ -585,11 +604,8 @@ impl BoltApp {
             // Format: "[WT_CERT] hash=<64 hex chars>"
             if self.wt_cert_hash.is_none() {
                 if let Some(hash) = recent.iter().find_map(|l| {
-                    if let Some(idx) = l.find("[WT_CERT] hash=") {
-                        Some(l[idx + 15..].trim().to_string())
-                    } else {
-                        None
-                    }
+                    l.find("[WT_CERT] hash=")
+                        .map(|idx| l[idx + 15..].trim().to_string())
                 }) {
                     tracing::info!("[UI] captured WT cert hash: {hash}");
                     self.wt_cert_hash = Some(hash);
@@ -597,7 +613,9 @@ impl BoltApp {
             }
 
             // Detect WT endpoint ready (must see this before advertising wtUrl)
-            if !self.wt_endpoint_ready && recent.iter().any(|l| l.contains("[WT_ENDPOINT] listening")) {
+            if !self.wt_endpoint_ready
+                && recent.iter().any(|l| l.contains("[WT_ENDPOINT] listening"))
+            {
                 self.wt_endpoint_ready = true;
                 tracing::info!("[UI] WT endpoint ready");
             }
@@ -673,34 +691,33 @@ impl BoltApp {
             }
 
             // Detect WS session establishment
-            if self.connection.is_connecting() {
-                if recent.iter().any(|l| (l.contains("[WS_SESSION]") || l.contains("[WT_SESSION]")) && l.contains("session established")) {
-                    tracing::info!("[UI] daemon session established — browser connected");
-                    self.connection = ConnectionState::Connected;
-                    // Determine verification mode from daemon HELLO logs.
-                    // Legacy HELLO (no identity) → transfer allowed immediately.
-                    // Identity HELLO → wait for user verification before transfer.
-                    let is_legacy = recent.iter().any(|l| l.contains("legacy HELLO"));
-                    if is_legacy {
-                        self.verify = VerifyState::Legacy;
-                        self.transfer = TransferState::Ready;
-                    } else {
-                        // Identity mode: extract SAS from daemon if available via IPC,
-                        // otherwise set pending with placeholder until IPC delivers it.
-                        // For now, detect SAS from HELLO logs.
-                        let sas = recent.iter().find_map(|l| {
-                            if let Some(idx) = l.find("[SAS]") {
-                                Some(l[idx + 5..].trim().to_string())
-                            } else {
-                                None
-                            }
-                        });
-                        self.verify = VerifyState::Pending {
-                            sas_code: sas.unwrap_or_else(|| "------".into()),
-                        };
-                        // Transfer stays Idle until user verifies
-                        self.transfer = TransferState::Idle;
-                    }
+            if self.connection.is_connecting()
+                && recent.iter().any(|l| {
+                    (l.contains("[WS_SESSION]") || l.contains("[WT_SESSION]"))
+                        && l.contains("session established")
+                })
+            {
+                tracing::info!("[UI] daemon session established — browser connected");
+                self.connection = ConnectionState::Connected;
+                // Determine verification mode from daemon HELLO logs.
+                // Legacy HELLO (no identity) → transfer allowed immediately.
+                // Identity HELLO → wait for user verification before transfer.
+                let is_legacy = recent.iter().any(|l| l.contains("legacy HELLO"));
+                if is_legacy {
+                    self.verify = VerifyState::Legacy;
+                    self.transfer = TransferState::Ready;
+                } else {
+                    // Identity mode: extract SAS from daemon if available via IPC,
+                    // otherwise set pending with placeholder until IPC delivers it.
+                    // For now, detect SAS from HELLO logs.
+                    let sas = recent
+                        .iter()
+                        .find_map(|l| l.find("[SAS]").map(|idx| l[idx + 5..].trim().to_string()));
+                    self.verify = VerifyState::Pending {
+                        sas_code: sas.unwrap_or_else(|| "------".into()),
+                    };
+                    // Transfer stays Idle until user verifies
+                    self.transfer = TransferState::Idle;
                 }
             }
 
@@ -708,7 +725,8 @@ impl BoltApp {
             // Daemon logs this when the WT/WS session ends and ACTIVE_SESSION is cleared.
             if matches!(self.connection, ConnectionState::Connected) {
                 let session_ended = recent.iter().any(|l| {
-                    l.contains("ACTIVE_SESSION cleared") || l.contains("active session handle cleared")
+                    l.contains("ACTIVE_SESSION cleared")
+                        || l.contains("active session handle cleared")
                 });
                 if session_ended {
                     tracing::info!("[UI] daemon session ended — peer disconnected");
@@ -723,12 +741,15 @@ impl BoltApp {
 
             // Detect transfer activity from daemon stderr (WS or WT path)
             if matches!(self.connection, ConnectionState::Connected) {
-                let is_transfer = |l: &str| l.contains("[WS_TRANSFER]") || l.contains("[WT_TRANSFER]");
+                let is_transfer =
+                    |l: &str| l.contains("[WS_TRANSFER]") || l.contains("[WT_TRANSFER]");
                 for line in &recent {
                     // Detect incoming file transfer start
                     if is_transfer(line) && line.contains("receiving:") {
                         // Extract filename from log: "[WS/WT_TRANSFER] ... receiving: filename (size bytes, ...)"
-                        let fname = line.split("receiving:").nth(1)
+                        let fname = line
+                            .split("receiving:")
+                            .nth(1)
                             .and_then(|s| s.trim().split('(').next())
                             .map(|s| s.trim().to_string())
                             .unwrap_or_else(|| "incoming file".into());
@@ -746,8 +767,11 @@ impl BoltApp {
                             let parts: Vec<&str> = frac.trim().splitn(2, '/').collect();
                             if parts.len() == 2 {
                                 let done: f32 = parts[0].trim().parse().unwrap_or(0.0);
-                                let total: f32 = parts[1].trim().split_whitespace().next()
-                                    .and_then(|s| s.parse().ok()).unwrap_or(1.0);
+                                let total: f32 = parts[1]
+                                    .split_whitespace()
+                                    .next()
+                                    .and_then(|s| s.parse().ok())
+                                    .unwrap_or(1.0);
                                 let pct = if total > 0.0 { done / total } else { 0.0 };
                                 match &mut self.transfer {
                                     TransferState::Sending { progress, .. } => *progress = pct,
@@ -761,10 +785,15 @@ impl BoltApp {
                     // Daemon format: "[WS_TRANSFER] {peer} saved: {name} ({bytes} bytes) → {path}"
                     if is_transfer(line) && line.contains("saved:") {
                         let after_saved = line.split("saved:").nth(1).unwrap_or("");
-                        let fname = after_saved.trim().split('(').next()
+                        let fname = after_saved
+                            .trim()
+                            .split('(')
+                            .next()
                             .map(|s| s.trim().to_string())
                             .unwrap_or_else(|| "file".into());
-                        let save_path = after_saved.split('\u{2192}').nth(1) // → arrow
+                        let save_path = after_saved
+                            .split('\u{2192}')
+                            .nth(1) // → arrow
                             .map(|s| s.trim().to_string());
                         // Reveal in Finder on macOS
                         if let Some(ref path) = save_path {
@@ -776,29 +805,34 @@ impl BoltApp {
                                     .spawn();
                             }
                         }
-                        self.transfer = TransferState::Complete { file_name: fname, save_path };
+                        self.transfer = TransferState::Complete {
+                            file_name: fname,
+                            save_path,
+                        };
                     }
                     // Detect send complete
                     // Daemon format: "[WS_TRANSFER] all {N} chunks queued for {name}"
                     if is_transfer(line) && line.contains("chunks queued") {
                         if let TransferState::Sending { ref file_name, .. } = self.transfer {
                             let name = file_name.clone();
-                            self.transfer = TransferState::Complete { file_name: name, save_path: None };
+                            self.transfer = TransferState::Complete {
+                                file_name: name,
+                                save_path: None,
+                            };
                         }
                     }
                 }
             }
 
             // Try IPC connection for event forwarding
-            if self.ipc_client.is_none() {
-                if proc
+            if self.ipc_client.is_none()
+                && proc
                     .recent_stderr(20)
                     .iter()
                     .any(|l| l.contains("[IPC] listening"))
-                {
-                    if let Ok(client) = IpcClient::connect(&self.socket_path) {
-                        self.ipc_client = Some(client);
-                    }
+            {
+                if let Ok(client) = IpcClient::connect(&self.socket_path) {
+                    self.ipc_client = Some(client);
                 }
             }
         }
@@ -886,7 +920,10 @@ impl BoltApp {
                             .and_then(|v| v.as_str())
                             .unwrap_or("unknown")
                             .to_string();
-                        self.transfer = TransferState::Complete { file_name, save_path: None };
+                        self.transfer = TransferState::Complete {
+                            file_name,
+                            save_path: None,
+                        };
                     }
                     _ => {}
                 }
@@ -948,7 +985,11 @@ impl eframe::App for BoltApp {
                         if p.peer_code == self.local_peer_code {
                             continue;
                         }
-                        if !self.discovered_peers.iter().any(|dp| dp.peer_code == p.peer_code) {
+                        if !self
+                            .discovered_peers
+                            .iter()
+                            .any(|dp| dp.peer_code == p.peer_code)
+                        {
                             self.discovered_peers.push(DiscoveredPeer {
                                 peer_code: p.peer_code,
                                 device_name: p.device_name,
@@ -971,7 +1012,11 @@ impl eframe::App for BoltApp {
                             Plane::Local => SignalingPlane::Local,
                             Plane::Cloud => SignalingPlane::Cloud,
                         };
-                        if !self.discovered_peers.iter().any(|p| p.peer_code == peer.peer_code) {
+                        if !self
+                            .discovered_peers
+                            .iter()
+                            .any(|p| p.peer_code == peer.peer_code)
+                        {
                             self.discovered_peers.push(DiscoveredPeer {
                                 peer_code: peer.peer_code,
                                 device_name: peer.device_name,
@@ -997,7 +1042,8 @@ impl eframe::App for BoltApp {
                         "connection_request" => {
                             if self.connection != ConnectionState::Idle {
                                 // Duplicate from same peer via other plane — ignore
-                                let dominated = self.incoming_request
+                                let dominated = self
+                                    .incoming_request
                                     .as_ref()
                                     .map(|r| r.peer_code == sig.from)
                                     .unwrap_or(false);
@@ -1010,11 +1056,15 @@ impl eframe::App for BoltApp {
                                     );
                                 }
                             } else {
-                                let device_name = sig.data.get("deviceName")
+                                let device_name = sig
+                                    .data
+                                    .get("deviceName")
                                     .and_then(|v| v.as_str())
                                     .unwrap_or("Unknown")
                                     .to_string();
-                                let device_type_str = sig.data.get("deviceType")
+                                let device_type_str = sig
+                                    .data
+                                    .get("deviceType")
                                     .and_then(|v| v.as_str())
                                     .unwrap_or("unknown");
                                 self.incoming_request = Some(IncomingRequest {
@@ -1023,11 +1073,20 @@ impl eframe::App for BoltApp {
                                     device_type: parse_device_type(device_type_str),
                                     plane: ui_plane,
                                 });
-                                tracing::info!("[UI] incoming connection request from {} (plane: {:?})", sig.from, sig_plane);
+                                tracing::info!(
+                                    "[UI] incoming connection request from {} (plane: {:?})",
+                                    sig.from,
+                                    sig_plane
+                                );
                             }
                         }
                         "connection_accepted" => {
-                            if let ConnectionState::Requesting { ref peer_code, ref peer_name, .. } = self.connection {
+                            if let ConnectionState::Requesting {
+                                ref peer_code,
+                                ref peer_name,
+                                ..
+                            } = self.connection
+                            {
                                 tracing::info!("[UI] connection accepted by {} — daemon WS server already running", sig.from);
                                 // Daemon WS server was already spawned in connect_to_peer().
                                 // Browser will now connect to it directly. Just update state.
@@ -1043,7 +1102,8 @@ impl eframe::App for BoltApp {
                         "connection_declined" => {
                             if let ConnectionState::Requesting { .. } = self.connection {
                                 tracing::info!("[UI] connection declined by {}", sig.from);
-                                self.connection = ConnectionState::Error("Connection declined".into());
+                                self.connection =
+                                    ConnectionState::Error("Connection declined".into());
                             }
                             if let Some(ref req) = self.incoming_request {
                                 if req.peer_code == sig.from {

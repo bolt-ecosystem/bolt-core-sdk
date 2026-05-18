@@ -181,9 +181,7 @@ impl DaemonLifecycle {
                         return;
                     }
 
-                    if !socket_path.exists()
-                        && !platform::is_windows_pipe_path(&self.socket_path)
-                    {
+                    if !socket_path.exists() && !platform::is_windows_pipe_path(&self.socket_path) {
                         std::thread::sleep(std::time::Duration::from_millis(250));
                         continue;
                     }
@@ -193,15 +191,11 @@ impl DaemonLifecycle {
                             tracing::info!(
                                 "[WATCHDOG] readiness confirmed: daemon v{daemon_version}"
                             );
-                            *self.daemon_version.lock().unwrap() =
-                                Some(daemon_version.clone());
+                            *self.daemon_version.lock().unwrap() = Some(daemon_version.clone());
                             self.watchdog.lock().unwrap().on_daemon_ready();
                             self.emit_watchdog_state();
 
-                            match self
-                                .bridge
-                                .start(socket_path, &self.app_version)
-                            {
+                            match self.bridge.start(socket_path, &self.app_version) {
                                 Ok(()) => {
                                     tracing::info!("[IPC_BRIDGE] started successfully");
                                 }
@@ -212,9 +206,7 @@ impl DaemonLifecycle {
                             return;
                         }
                         ReadinessResult::Incompatible { daemon_version } => {
-                            tracing::warn!(
-                                "[WATCHDOG] daemon incompatible: v{daemon_version}"
-                            );
+                            tracing::warn!("[WATCHDOG] daemon incompatible: v{daemon_version}");
                             *self.daemon_version.lock().unwrap() = Some(daemon_version);
                             self.watchdog.lock().unwrap().on_version_incompatible();
                             self.emit_watchdog_state();
@@ -444,9 +436,7 @@ impl DaemonLifecycle {
                 break;
             }
             if std::time::Instant::now() >= deadline {
-                tracing::warn!(
-                    "[WATCHDOG] daemon did not exit in 5s, forcing kill (pid={pid})"
-                );
+                tracing::warn!("[WATCHDOG] daemon did not exit in 5s, forcing kill (pid={pid})");
                 platform::process_force_kill(pid);
                 std::thread::sleep(std::time::Duration::from_millis(500));
                 break;
