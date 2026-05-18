@@ -172,10 +172,12 @@ mod tests {
     #[test]
     fn chain_advance_output_zeroized_on_drop() {
         let ck = [0xAB; 32];
-        let out = Box::new(chain_advance(&ck));
+        let mut out = std::mem::ManuallyDrop::new(chain_advance(&ck));
         let mk_ptr = out.message_key.as_ptr();
         let nck_ptr = out.next_chain_key.as_ptr();
-        drop(out);
+        unsafe {
+            std::ptr::drop_in_place(&mut *out);
+        }
         for i in 0..32 {
             let mk_byte = unsafe { std::ptr::read_volatile(mk_ptr.add(i)) };
             let nck_byte = unsafe { std::ptr::read_volatile(nck_ptr.add(i)) };
