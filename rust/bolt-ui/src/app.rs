@@ -796,14 +796,12 @@ impl BoltApp {
                             .nth(1) // → arrow
                             .map(|s| s.trim().to_string());
                         // Reveal in Finder on macOS
+                        #[cfg(target_os = "macos")]
                         if let Some(ref path) = save_path {
-                            #[cfg(target_os = "macos")]
-                            {
-                                let _ = std::process::Command::new("open")
-                                    .arg("-R")
-                                    .arg(path)
-                                    .spawn();
-                            }
+                            let _ = std::process::Command::new("open")
+                                .arg("-R")
+                                .arg(path)
+                                .spawn();
                         }
                         self.transfer = TransferState::Complete {
                             file_name: fname,
