@@ -241,7 +241,7 @@ Tests exist **only** in the `localbolt` repo (10 files):
 | Transfer progress UI | Product repo |
 | Device detection (user-agent) | Product repo |
 | Platform-specific RTC config | Product repo |
-| Tauri native shell | Product repo |
+| Native product shell | Product repo |
 | Netlify/Fly.io deployment | Product repo |
 
 ---
@@ -488,7 +488,7 @@ Each increment is a self-contained step. Products stay green after each.
 
 **Risk:** High — new feature. Products have no persistent identity today.
 
-**Product integration:** Products implement `IdentityStore` (localStorage for web, filesystem for Tauri). Initially optional; required for spec conformance.
+**Product integration:** Products implement `IdentityStore` (localStorage for web, native filesystem/keychain storage for native shells). Initially optional; required for spec conformance.
 
 ---
 

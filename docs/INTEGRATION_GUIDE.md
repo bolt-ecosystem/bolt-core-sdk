@@ -213,7 +213,7 @@ browser environments. It is an adapter that passes the same golden vectors
 as the Rust implementation.
 
 See `docs/BOUNDARY_CONTRACT.md` for the full consumer boundary specification
-(Rust-direct, WASM, and Tauri IPC patterns).
+(Rust-direct, WASM, and native app sidecar patterns).
 
 ### 2.6 Signaling
 
@@ -237,8 +237,8 @@ channel security.
 
 | What | Why not required |
 |------|-----------------|
-| Product-specific UI (localbolt UX, bolt-ui shell) | Contract is behavioral; UI is product-specific |
-| Same runtime architecture (Tauri, bolt-daemon sidecar, egui, SwiftUI) | Architecture choices are product-specific |
+| Product-specific UI (localbolt UX, native shell) | Contract is behavioral; UI is product-specific |
+| Same runtime architecture (browser, bolt-daemon sidecar, SwiftUI, future native shells) | Architecture choices are product-specific |
 | bolt-daemon itself | Required only for native apps needing the daemon-centered transport path |
 | WebRTC transport | Required only for browser↔browser peers |
 | Native QUIC/quinn | Required only for native↔native path |

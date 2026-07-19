@@ -5,10 +5,10 @@ edition = "2021"
 description = "Shared app runtime core for LocalBolt native shells (desktop/mobile)"
 license = "MIT"
 
-# NATIVE-APP-CORE-1: Extracted from localbolt-app Tauri backend.
+# NATIVE-APP-CORE-1: Extracted from the native app runtime.
 # Owns daemon supervision, IPC contract, cross-platform transport,
 # signal monitoring, crash diagnostics, and platform path abstraction.
-# Zero Tauri dependency — consumable by egui, SwiftUI, Kotlin shells.
+# Shell-independent — consumable by SwiftUI, Kotlin, and future native shells.
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

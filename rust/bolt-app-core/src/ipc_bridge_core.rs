@@ -1,7 +1,7 @@
 //! Shell-agnostic IPC bridge for daemon event forwarding.
 //!
 //! Persistent connection to daemon: version handshake, event dispatch
-//! via callback, decision relay. No Tauri dependency.
+//! via callback, decision relay. No shell-framework dependency.
 //!
 //! Extracted from localbolt-app ipc_bridge.rs (NATIVE-APP-CORE-1).
 

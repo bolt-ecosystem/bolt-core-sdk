@@ -29,7 +29,7 @@ Phase 2B governance document. Defines product boundaries, repo roles, release di
 | Repo | Product | Transport | Platform | Rendezvous | Daemon |
 |------|---------|-----------|----------|------------|--------|
 | `localbolt` | Open-source lite app | WebRTC | Browser | Bundled (subtree) | No |
-| `localbolt-app` | Open-source native app | WebRTC | Tauri (desktop/mobile) | Bundled (subtree) | Yes |
+| `localbolt-app` | Open-source native app | WebRTC + daemon transports | SwiftUI macOS shell over Rust core | Bundled (subtree) | Yes |
 | `localbolt-v3` | Web app (Netlify) | WebRTC | Browser | Hosted endpoint | No |
 
 ### Legacy (read-only)
@@ -43,15 +43,15 @@ Phase 2B governance document. Defines product boundaries, repo roles, release di
 
 | Option | Pros | Cons | Risk |
 |--------|------|------|------|
-| **A: Keep all 3, define lanes** | No migration work. Each repo has a clear deployment target. localbolt-app has Tauri native that cannot merge into a pure-web repo. | Three repos with near-identical web/ source. Drift risk. | Medium: divergence over time |
+| **A: Keep all 3, define lanes** | Each repo has a clear deployment target. localbolt-app owns native shells that cannot merge into a pure-web repo. | Three repos with related product surfaces. Drift risk. | Medium: divergence over time |
 | **B: Deprecate localbolt** | Reduces to 2 active products. localbolt-app already has a superset (web + native). | localbolt has the only test suite and CI coverage. Loss of the lightweight standalone. | High: lose test coverage, standalone use case |
 | **C: Deprecate localbolt-v3** | localbolt is the canonical open-source lite product. v3 was a stepping stone. | v3 is the live Netlify deployment. Migration required. | Medium: deployment migration needed |
-| **D: Merge localbolt + localbolt-app** | Single canonical product repo. Shared test suite. | Tauri config + web-only use case in same repo. Build complexity increases. | High: structural work, not just governance |
+| **D: Merge localbolt + localbolt-app** | Single canonical product repo. Shared test suite. | Native app packaging + web-only use case in same repo. Build complexity increases. | High: structural work, not just governance |
 
 ### Decision: **Option A — Keep all 3, define lanes**
 
 **Rationale:**
-1. localbolt and localbolt-app share web source but serve different deployment targets (standalone browser vs Tauri native). Merging requires structural work beyond this phase's scope.
+1. localbolt and localbolt-app serve different deployment targets (standalone browser vs native app). Merging requires structural work beyond this phase's scope.
 2. localbolt-v3 is the live production deployment on Netlify with landing page content that the other repos lack.
 3. localbolt is the only repo with a test suite (237 tests). It serves as the canonical test bed.
 4. No repo is dead weight — each has a distinct deployment target.
@@ -59,12 +59,12 @@ Phase 2B governance document. Defines product boundaries, repo roles, release di
 **Lane definitions:**
 
 - **localbolt**: Canonical open-source web app. Standalone browser deployment. Owns the test suite. Bundled rendezvous for fully offline operation.
-- **localbolt-app**: Tauri-based native application. Adds native file system access, background transfers, and bolt-daemon integration. Web layer tracks localbolt.
+- **localbolt-app**: Native application. Adds native file system access, background transfers, and bolt-daemon integration through SwiftUI + Rust wrappers.
 - **localbolt-v3**: Netlify-deployed web app with landing page. Production web deployment. No bundled infrastructure.
 
 **Constraints enforced by this decision:**
 - Web source changes should originate in localbolt (which has tests), then propagate to localbolt-app and localbolt-v3.
-- localbolt-app owns Tauri/native-only code. localbolt-v3 owns landing page sections.
+- localbolt-app owns native-only code. localbolt-v3 owns landing page sections.
 - No new product repos until protocol and SDK reach 1.0.
 
 ## 3. Release Train
@@ -162,7 +162,7 @@ Contents: `@the9ines:registry=https://npm.pkg.github.com` — no auth tokens.
 
 - SDK publish triggers on strict semver tags only: `sdk-v<MAJOR>.<MINOR>.<PATCH>`.
 - Suffix tags (e.g. `sdk-v0.0.5-phase2a`) must NOT trigger publish.
-- Product tags follow repo-specific conventions (see ecosystem CLAUDE.md).
+- Product tags follow repo-specific release conventions.
 
 ## 7. Headless Transport Lane
 

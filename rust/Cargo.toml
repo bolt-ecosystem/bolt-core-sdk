@@ -4,8 +4,6 @@ members = [
     "bolt-btr",
     "bolt-transfer-core",
     "bolt-transfer-policy-wasm",
-    "bolt-ui",
-    "bolt-ui-wasm",
     "bolt-protocol-wasm",
     "bolt-app-core",
 ]

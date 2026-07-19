@@ -13,10 +13,10 @@ canonical contract. No UniFFI, cbindgen, or formal FFI layer is required.
 
 **Rationale:**
 1. Native consumers (bolt-daemon) are Rust — direct crate dependency, no FFI.
-2. Tauri app communicates with daemon via IPC (sidecar), not linked library.
+2. Native shells communicate with daemon via IPC (sidecar) or a thin FFI bridge.
 3. Browser path has wasm-bindgen coverage for policy.
-4. No Swift/Kotlin consumers exist (bytebolt-app is stub).
-5. Building UniFFI now would be speculative infrastructure with no consumer.
+4. The macOS SwiftUI shell uses the `localbolt-app/native/shared` C-ABI bridge.
+5. Building UniFFI now would be speculative infrastructure until another platform needs it.
 
 If a non-Rust native consumer materializes (Swift, Kotlin, C++), this
 document MUST be revised and a dedicated FFI pass opened.
@@ -31,7 +31,7 @@ Three boundary mechanisms serve the full consumer matrix:
 |------|-----------|-----------|-------------|
 | **Rust-direct** | Cargo path dependency | bolt-daemon | Native `Result<T, BoltError>` / `Result<T, BtrError>` / `Result<T, TransferError>` |
 | **WASM** | wasm-bindgen | localbolt-v3 (browser) | Flat DTOs, no panics, no Result (errors encoded in return struct) |
-| **Tauri IPC** | NDJSON over Unix socket / Windows named pipe | localbolt-app | `Result<T, String>` via Tauri commands; events are fire-and-forget |
+| **Native app sidecar IPC** | NDJSON over Unix socket / Windows named pipe | localbolt-app native shells | Typed shell bridge + sidecar events |
 
 ---
 
@@ -102,36 +102,36 @@ that WASM boundary outputs match direct native calls for identical inputs.
 
 ---
 
-## Boundary 3: Tauri IPC (localbolt-app ↔ bolt-daemon)
+## Boundary 3: Native App Sidecar IPC (localbolt-app ↔ bolt-daemon)
 
 ### Architecture
 
-localbolt-app does **not** link bolt-core-sdk as a library. The Tauri
-shell manages the bolt-daemon as a sidecar process and communicates via
-IPC.
+localbolt-app native shells keep UI/platform code thin. The shell talks to
+the shared Rust bridge and a bundled bolt-daemon sidecar; daemon events and
+decisions use the NDJSON IPC contract.
 
 ```
-┌──────────────┐    Tauri IPC     ┌──────────────┐    NDJSON/socket    ┌──────────────┐
-│  React/TS UI │ ◄──────────────► │  Tauri Rust  │ ◄────────────────► │  bolt-daemon │
-│  (WebView)   │  invoke + events │  (commands)  │  Unix/named pipe   │  (sidecar)   │
+┌──────────────┐    FFI / shell API    ┌───────────────────┐   NDJSON/socket    ┌──────────────┐
+│ Native shell │ ◄───────────────────► │ Rust native bridge│ ◄───────────────► │  bolt-daemon │
+│  (SwiftUI)   │   typed callbacks      │ + app runtime core│  Unix/named pipe │  (sidecar)   │
 └──────────────┘                  └──────────────┘                    └──────────────┘
                                                                        │
                                                                        ├── bolt-core
                                                                        └── bolt-transfer-core
 ```
 
-### Tauri Command Surface (Rust → Frontend)
+### Shell Decision Surface
 
 | Command | Direction | Return | Purpose |
 |---------|-----------|--------|---------|
-| `get_watchdog_state` | TS → Rust | `WatchdogStateResponse` | Poll lifecycle state |
-| `get_signal_status` | TS → Rust | Signal health probe | Health check |
-| `restart_daemon` | TS → Rust | `String` | Manual restart |
-| `send_pairing_decision` | TS → Rust | `String` | Relay user pairing choice |
-| `send_transfer_decision` | TS → Rust | `String` | Relay user transfer choice |
-| `export_support_bundle` | TS → Rust | `String` | Diagnostic export |
+| `get_watchdog_state` | Shell → Rust | `WatchdogStateResponse` | Poll lifecycle state |
+| `get_signal_status` | Shell → Rust | Signal health probe | Health check |
+| `restart_daemon` | Shell → Rust | Result/status | Manual restart |
+| `send_pairing_decision` | Shell → Rust | Result/status | Relay user pairing choice |
+| `send_transfer_decision` | Shell → Rust | Result/status | Relay user transfer choice |
+| `export_support_bundle` | Shell → Rust | Result/status | Diagnostic export |
 
-### Tauri Event Surface (Rust → Frontend)
+### Native Event Surface (Rust → Shell)
 
 | Event | Payload | Trigger |
 |-------|---------|---------|
@@ -142,7 +142,7 @@ IPC.
 | `daemon://bridge-disconnected` | `()` | IPC connection lost |
 | `signal://status` | `{ status, consecutive_failures }` | Signal server health |
 
-### NDJSON IPC Protocol (Tauri ↔ Daemon)
+### NDJSON IPC Protocol (Native Bridge ↔ Daemon)
 
 Wire format: newline-delimited JSON. Each message ends with `\n`.
 
@@ -163,7 +163,7 @@ Version handshake is mandatory first exchange. See
 
 ### Error Model
 
-- Tauri commands return `Result<T, String>` — errors are stringified.
+- Shell bridge calls return typed success/error results appropriate to the platform binding.
 - Events are fire-and-forget (no acknowledgment).
 - IPC failures trigger `daemon://bridge-disconnected` event.
 - Daemon unreachable → watchdog FSM transitions through `restarting` →
@@ -171,7 +171,7 @@ Version handshake is mandatory first exchange. See
 
 ### Lifecycle
 
-1. Tauri app spawns bolt-daemon as sidecar process.
+1. Native app spawns bolt-daemon as sidecar process.
 2. Watchdog probes readiness via one-shot IPC handshake.
 3. On success, persistent IPC bridge starts event forwarding.
 4. On crash, watchdog retries with exponential backoff (max 3).
@@ -186,7 +186,7 @@ Version handshake is mandatory first exchange. See
 | bolt-daemon envelope.rs | **Active** | Daemon's own envelope codec for DataChannel frames. Uses `bolt-core::crypto` internally. Not a duplicate — it implements the profile-level envelope, not the core envelope. |
 | bolt-daemon web_hello.rs | **Active** | HELLO protocol orchestration. Uses `bolt-core::crypto::seal_box_payload`. Lifecycle logic (pre_hello/post_hello/closed) is daemon-owned — migration to shared code is AC-RC-07 scope. |
 | bolt-daemon session.rs | **Active** | SessionContext holding negotiated keys. Thin wrapper, not duplicating SDK logic. |
-| localbolt-app Tauri crate-type `staticlib`/`cdylib` | **Unused** | Configured in Cargo.toml but no `extern "C"` functions exist. Retained for potential future use. No action needed. |
+| localbolt-app native bridge | **Active** | C-ABI bridge in `localbolt-app/native/shared`; used by the SwiftUI macOS shell. |
 
 **Deferred to AC-RC-07:** Session/handshake lifecycle (pre_hello → post_hello → closed, verification state, capability dispatch) currently lives in bolt-daemon's `web_hello.rs` and `session.rs`. Migration to a shared crate is AC-RC-07 scope and MUST NOT be attempted in this pass.
 

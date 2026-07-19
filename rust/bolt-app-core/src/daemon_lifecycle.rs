@@ -2,7 +2,7 @@
 //!
 //! Manages daemon spawn/restart/shutdown, readiness probing, watchdog
 //! transitions, PID tracking, and stderr/crash-log integration.
-//! Uses callbacks for event emission — no Tauri dependency.
+//! Uses callbacks for event emission — no shell-framework dependency.
 //!
 //! Extracted from localbolt-app daemon.rs (NATIVE-APP-CORE-1).
 

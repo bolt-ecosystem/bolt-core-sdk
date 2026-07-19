@@ -1,8 +1,8 @@
 //! bolt-app-core — shared app runtime for LocalBolt native shells.
 //!
-//! Extracted from localbolt-app Tauri backend (NATIVE-APP-CORE-1).
-//! Zero Tauri dependency. Consumable by any Rust-based shell:
-//! egui desktop (bolt-ui), SwiftUI/Kotlin mobile (via UniFFI), or Tauri (transitional).
+//! Extracted from the native app runtime (NATIVE-APP-CORE-1).
+//! Shell-independent runtime consumed by platform-native shells through
+//! direct Rust APIs or a thin FFI bridge.
 //!
 //! # Modules
 //!

@@ -63,7 +63,7 @@ The authority model has two normative doc layers and one executable layer:
 | API surface (Rust) | `docs/API_SURFACE.md` (unified crate registry) | |
 | API stability (Rust) | `docs/SDK_STABILITY.md` §6 (Rust crate) | |
 | API stability (TS) | `docs/SDK_STABILITY.md` §1–§5 (TypeScript) | |
-| Consumer boundaries | `docs/BOUNDARY_CONTRACT.md` (Rust-direct, WASM, Tauri IPC) | |
+| Consumer boundaries | `docs/BOUNDARY_CONTRACT.md` (Rust-direct, WASM, native app sidecar IPC) | |
 | Transport requirements | `docs/TRANSPORT_CONTRACT.md` | |
 | Operator surface | `docs/DAEMON_CONTRACT.md` (bolt-daemon repo) | |
 

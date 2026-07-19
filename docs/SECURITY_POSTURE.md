@@ -107,7 +107,7 @@ Full enforcement specification: `bolt-ecosystem/docs/PROTOCOL_ENFORCEMENT.md`
 
 ## Audit Trail
 
-Full audit tracker with per-finding evidence: `bolt-ecosystem/docs/AUDIT_TRACKER.md` (relocated in DOC-GOV-2)
+Detailed internal audit trackers are kept outside the public SDK tree.
 
 Conformance mapping (spec to test): [`docs/conformance/LOCALBOLT_CONFORMANCE.md`](conformance/LOCALBOLT_CONFORMANCE.md)
 

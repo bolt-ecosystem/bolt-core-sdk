@@ -336,7 +336,7 @@ from SemVer guarantees.
 |----------|-------------|----------|-----------|
 | bolt-daemon | `bolt-core`, `bolt-transfer-core` | Rust path dep | `bolt-daemon/Cargo.toml` |
 | localbolt-v3 (browser) | `bolt-transfer-policy-wasm` | wasm-bindgen | `localbolt-v3/packages/` |
-| localbolt-app (Tauri) | None (IPC to daemon) | NDJSON IPC | `docs/BOUNDARY_CONTRACT.md` |
+| localbolt-app native shell | Rust bridge + daemon IPC | C-ABI + NDJSON IPC | `docs/BOUNDARY_CONTRACT.md` |
 | localbolt (browser) | None (TS SDK only) | N/A | — |
 
 See `docs/BOUNDARY_CONTRACT.md` for full boundary contract details.
