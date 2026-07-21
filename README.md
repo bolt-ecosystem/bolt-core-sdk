@@ -45,8 +45,8 @@ The SDK that all Bolt-based applications embed to speak Bolt Core. One codepath 
 
 ## Packaging
 
-- **Rust crate**: `bolt-core`
-- **TypeScript package**: `@the9ines/bolt-core`
+- **Rust crates** (this repository): `bolt-core`, `bolt-btr`, `bolt-transfer-core`, `bolt-app-core`
+- **TypeScript package**: `@the9ines/bolt-core` — published artifact consumed by the web apps; TS sources are not part of this tree.
 
 ---
 

@@ -83,7 +83,9 @@ Phase 2B governance document. Defines product boundaries, repo roles, release di
 
 ### Process
 
-See `docs/RELEASE_PLAYBOOK.md` for step-by-step procedure.
+Release steps are repo-convention: version bump, changelog entry, tag. The
+npm publish playbook applies only if/when TS packages are deliberately
+packaged back into this tree.
 
 ## 4. Deprecation Policy
 

@@ -8,74 +8,14 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Repository shape detection
-  # The SDK main branch is Rust-only unless TS package directories are present.
-  # Push events run without path-filter outputs, so guard TS jobs explicitly.
-  # ---------------------------------------------------------------------------
-  repo-shape:
-    name: Detect repository shape
-    runs-on: ubuntu-latest
-    outputs:
-      bolt_core_ts_present: ${{ steps.shape.outputs.bolt_core_ts_present }}
-      transport_web_present: ${{ steps.shape.outputs.transport_web_present }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-      - id: shape
-        run: |
-          if [ -f ts/bolt-core/package.json ]; then
-            echo "bolt_core_ts_present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "bolt_core_ts_present=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if [ -f ts/bolt-transport-web/package.json ]; then
-            echo "transport_web_present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "transport_web_present=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  # ---------------------------------------------------------------------------
-  # Path-based change detection (PR only)
-  # On push to main, Rust runs unconditionally; TS jobs also require tracked TS
-  # package directories from repo-shape.
-  # ---------------------------------------------------------------------------
-  changes:
-    name: Detect changed areas
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    outputs:
-      rust: ${{ steps.filter.outputs.rust }}
-      bolt_core_ts: ${{ steps.filter.outputs.bolt_core_ts }}
-      transport_web: ${{ steps.filter.outputs.transport_web }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
-        id: filter
-        with:
-          filters: |
-            rust:
-              - 'rust/**'
-            bolt_core_ts:
-              - 'ts/bolt-core/**'
-              - 'rust/bolt-core/test-vectors/btr/**'
-            transport_web:
-              - 'ts/bolt-transport-web/**'
-              - 'ts/bolt-core/**'
-
-  # ---------------------------------------------------------------------------
-  # Rust suite — fmt, clippy, test
-  # Exact commands from ci-rust.yml
+  # The SDK main branch is Rust/core-focused. TS package gates return if/when
+  # TS packages are deliberately packaged back into this tree.
   # ---------------------------------------------------------------------------
   rust:
     name: Rust fmt + clippy + test
-    needs: changes
-    if: >-
-      always() &&
-      (github.event_name == 'push' || needs.changes.outputs.rust == 'true')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -103,110 +43,19 @@ jobs:
         run: cargo test --workspace --features vectors
 
   # ---------------------------------------------------------------------------
-  # bolt-core TypeScript suite — build, vectors, exports, test
-  # Exact commands from ci.yml
-  # ---------------------------------------------------------------------------
-  bolt-core-ts:
-    name: bolt-core TS build + test
-    needs:
-      - changes
-      - repo-shape
-    if: >-
-      always() &&
-      needs.repo-shape.outputs.bolt_core_ts_present == 'true' &&
-      (github.event_name == 'push' || needs.changes.outputs.bolt_core_ts == 'true')
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ts/bolt-core
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
-        with:
-          node-version: 20
-
-      - name: Verify cross-language constants
-        working-directory: .
-        run: ./scripts/verify-constants.sh
-
-      - name: Verify BTR cross-language constants
-        working-directory: .
-        run: ./scripts/verify-btr-constants.sh
-
-      - run: npm ci
-      - run: npm run build
-      - run: npm run check-vectors
-      - run: npm run audit-exports
-      - run: npm run test
-
-  # ---------------------------------------------------------------------------
-  # transport-web suite — build, test, then bolt-core gate
-  # Exact commands from ci-transport-web.yml
-  # ---------------------------------------------------------------------------
-  transport-web:
-    name: transport-web build + test
-    needs:
-      - changes
-      - repo-shape
-    if: >-
-      always() &&
-      needs.repo-shape.outputs.transport_web_present == 'true' &&
-      (github.event_name == 'push' || needs.changes.outputs.transport_web == 'true')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
-        with:
-          node-version: 20
-          registry-url: https://npm.pkg.github.com
-          scope: '@the9ines'
-
-      - name: Install dependencies
-        working-directory: ts/bolt-transport-web
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build (typecheck)
-        working-directory: ts/bolt-transport-web
-        run: npm run build
-
-      - name: Test
-        working-directory: ts/bolt-transport-web
-        run: npm test
-
-      - name: Run bolt-core gate
-        working-directory: ts/bolt-core
-        run: |
-          npm ci
-          npm run build
-          npm run test
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ---------------------------------------------------------------------------
-  # Summary gate — fails if any suite failed
+  # Summary gate — stable required-check name; fails if the suite failed
   # ---------------------------------------------------------------------------
   summary:
     name: CI Gate Summary
     needs:
       - rust
-      - bolt-core-ts
-      - transport-web
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Print suite results
         run: |
-          echo "rust result:          ${{ needs.rust.result }}"
-          echo "bolt-core-ts result:  ${{ needs['bolt-core-ts'].result }}"
-          echo "transport-web result: ${{ needs.transport-web.result }}"
+          echo "rust result: ${{ needs.rust.result }}"
 
-      - name: Fail gate if any suite failed
-        if: >-
-          needs.rust.result == 'failure' ||
-          needs['bolt-core-ts'].result == 'failure' ||
-          needs['transport-web'].result == 'failure'
+      - name: Fail gate if the suite failed
+        if: needs.rust.result != 'success'
         run: exit 1
