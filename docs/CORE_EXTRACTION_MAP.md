@@ -8,9 +8,13 @@
 
 ## 1. Executive Summary
 
-All three product repos (localbolt, localbolt-app, localbolt-v3) share **identical** core protocol implementations. The sole difference is a single JSDoc comment wording on line 12 of `crypto-utils.ts` in localbolt-app — zero behavioral divergence.
+The historical web product repos (`localbolt` and `localbolt-v3`) shared core
+protocol implementations that were extracted into the SDK. `localbolt-app` no
+longer carries a web package; it is now a native shell over the shared Rust
+bridge and daemon.
 
-This means extraction is a clean lift: one canonical source, no reconciliation needed.
+This means future TypeScript extraction work should compare the current web
+surfaces only; native app work should use `bolt-app-core` / `native/shared`.
 
 ### Current State
 
@@ -40,10 +44,10 @@ All paths relative to workspace root `~/Desktop/the9ines.com/bolt-ecosystem/`.
 | Repo | Path |
 |------|------|
 | localbolt | `localbolt/web/src/services/webrtc/WebRTCService.ts` |
-| localbolt-app | `localbolt-app/web/src/services/webrtc/WebRTCService.ts` |
 | localbolt-v3 | `localbolt-v3/packages/localbolt-web/src/services/webrtc/WebRTCService.ts` |
 
-**Status:** Identical across all 3 repos.
+**Status:** Historical extraction map. The native app's retired web package has
+been removed.
 
 | Lines | Responsibility | Core vs Profile |
 |-------|---------------|-----------------|
@@ -76,10 +80,10 @@ All paths relative to workspace root `~/Desktop/the9ines.com/bolt-ecosystem/`.
 | Repo | Path |
 |------|------|
 | localbolt | `localbolt/web/src/lib/crypto-utils.ts` |
-| localbolt-app | `localbolt-app/web/src/lib/crypto-utils.ts` |
 | localbolt-v3 | `localbolt-v3/packages/localbolt-web/src/lib/crypto-utils.ts` |
 
-**Status:** localbolt-app has 1 comment-only diff on line 12. Code identical.
+**Status:** Historical extraction map. The native app's retired web package has
+been removed.
 
 | Lines | Responsibility | Core vs Profile |
 |-------|---------------|-----------------|
@@ -100,10 +104,10 @@ All paths relative to workspace root `~/Desktop/the9ines.com/bolt-ecosystem/`.
 | Repo | Path |
 |------|------|
 | localbolt | `localbolt/web/src/types/webrtc-errors.ts` |
-| localbolt-app | `localbolt-app/web/src/types/webrtc-errors.ts` |
 | localbolt-v3 | `localbolt-v3/packages/localbolt-web/src/types/webrtc-errors.ts` |
 
-**Status:** Identical across all 3 repos.
+**Status:** Historical extraction map. The native app's retired web package has
+been removed.
 
 | Lines | Responsibility | Core vs Profile |
 |-------|---------------|-----------------|
@@ -122,10 +126,10 @@ All paths relative to workspace root `~/Desktop/the9ines.com/bolt-ecosystem/`.
 | Repo | Path |
 |------|------|
 | localbolt | `localbolt/web/src/services/signaling/SignalingProvider.ts` |
-| localbolt-app | `localbolt-app/web/src/services/signaling/SignalingProvider.ts` |
 | localbolt-v3 | `localbolt-v3/packages/localbolt-web/src/services/signaling/SignalingProvider.ts` |
 
-**Status:** Identical across all 3 repos.
+**Status:** Historical extraction map. The native app's retired web package has
+been removed.
 
 | Lines | Responsibility | Core vs Profile |
 |-------|---------------|-----------------|

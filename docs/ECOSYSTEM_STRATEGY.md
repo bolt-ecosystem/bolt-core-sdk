@@ -155,8 +155,10 @@ No other permissions should be granted. No custom secrets.
 |------|-----------------|--------|
 | bolt-core-sdk | `ts/bolt-core/.npmrc` | Package directory (publisher) |
 | localbolt | `web/.npmrc` | Package directory (npm ci runs in web/) |
-| localbolt-app | `web/.npmrc` | Package directory (npm ci runs in web/) |
 | localbolt-v3 | `.npmrc` (repo root) | Monorepo (npm ci runs at root) |
+
+`localbolt-app` no longer has a web package; native app dependency updates are
+handled through Rust/Swift native gates.
 
 Contents: `@the9ines:registry=https://npm.pkg.github.com` — no auth tokens.
 
