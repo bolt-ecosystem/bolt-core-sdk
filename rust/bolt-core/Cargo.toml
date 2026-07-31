@@ -4,7 +4,7 @@ version = "0.4.0"
 edition = "2021"
 description = "Canonical Bolt Protocol core — crypto primitives and utilities"
 license = "MIT"
-repository = "https://github.com/the9ines/bolt-core-sdk"
+repository = "https://github.com/bolt-ecosystem/bolt-core-sdk"
 
 [features]
 default = []

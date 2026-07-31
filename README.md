@@ -1,6 +1,6 @@
 # Bolt Core SDK
 
-Open reference implementation of the [Bolt Protocol](https://github.com/the9ines/bolt-protocol) for encrypted device-to-device file transfer.
+Open reference implementation of the [Bolt Protocol](https://github.com/bolt-ecosystem/bolt-protocol) for encrypted device-to-device file transfer.
 
 ---
 
@@ -8,7 +8,7 @@ Open reference implementation of the [Bolt Protocol](https://github.com/the9ines
 
 The SDK that all Bolt-based applications embed to speak Bolt Core. One codepath for pairing, TOFU pinning, handshake gating, envelope encryption, and the transfer state machine.
 
-**Note:** The Bolt Protocol specification (PROTOCOL.md, LOCALBOLT_PROFILE.md) currently resides in this repository until [bolt-protocol](https://github.com/the9ines/bolt-protocol) is fully separated.
+**Note:** The Bolt Protocol specification (PROTOCOL.md, LOCALBOLT_PROFILE.md) currently resides in this repository until [bolt-protocol](https://github.com/bolt-ecosystem/bolt-protocol) is fully separated.
 
 ---
 
@@ -40,8 +40,8 @@ The SDK that all Bolt-based applications embed to speak Bolt Core. One codepath 
 
 | Relationship | Repository |
 |-------------|-----------|
-| Specification | [bolt-protocol](https://github.com/the9ines/bolt-protocol) |
-| Depends on this | [localbolt](https://github.com/the9ines/localbolt), [localbolt-app](https://github.com/the9ines/localbolt-app), [localbolt-v3](https://github.com/the9ines/localbolt-v3), [bytebolt-app](https://github.com/the9ines/bytebolt-app), [bolt-daemon](https://github.com/the9ines/bolt-daemon) |
+| Specification | [bolt-protocol](https://github.com/bolt-ecosystem/bolt-protocol) |
+| Depends on this | [localbolt](https://github.com/bolt-ecosystem/localbolt), [localbolt-app](https://github.com/bolt-ecosystem/localbolt-native), [localbolt-v3](https://github.com/bolt-ecosystem/localbolt-v3), [bytebolt-app](https://github.com/bolt-ecosystem/bytebolt-app), [bolt-daemon](https://github.com/bolt-ecosystem/bolt-daemon) |
 
 ## Packaging
 

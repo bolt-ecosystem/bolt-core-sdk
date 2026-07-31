@@ -149,7 +149,7 @@ bolt-daemon consumes SDK-compatible types under this contract:
 - Peer codes follow `PEER_CODE_ALPHABET` and `PEER_CODE_LENGTH`
 
 The daemon operator surface is defined in bolt-daemon's
-[DAEMON_CONTRACT.md](https://github.com/the9ines/bolt-daemon/blob/main/docs/DAEMON_CONTRACT.md)
+[DAEMON_CONTRACT.md](https://github.com/bolt-ecosystem/bolt-daemon/blob/main/docs/DAEMON_CONTRACT.md)
 (`daemon-v0.1.0-daemon-contract` and later).
 
 Changes to this SDK that would break bolt-daemon compatibility MUST be

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Bolt Transfer Ratchet — per-transfer DH + per-chunk symmetric chain (§16)"
 license = "MIT"
-repository = "https://github.com/the9ines/bolt-core-sdk"
+repository = "https://github.com/bolt-ecosystem/bolt-core-sdk"
 
 [features]
 default = []

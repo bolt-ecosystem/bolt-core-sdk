@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "WASM bindings for bolt-transfer-core policy decisions"
 license = "MIT"
-repository = "https://github.com/the9ines/bolt-core-sdk"
+repository = "https://github.com/bolt-ecosystem/bolt-core-sdk"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

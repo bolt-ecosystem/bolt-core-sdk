@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Transport-agnostic transfer state machine for the Bolt Protocol (§9)"
 license = "MIT"
-repository = "https://github.com/the9ines/bolt-core-sdk"
+repository = "https://github.com/bolt-ecosystem/bolt-core-sdk"
 
 [dependencies]
 # No transport dependencies. No crypto dependencies.
