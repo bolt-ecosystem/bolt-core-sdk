@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# One workflow for the Rust suite (ci-rust.yml ran the identical job a second
+# time and is gone). A newer push to the same PR or branch cancels the older run.
+concurrency:
+  group: ci-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ---------------------------------------------------------------------------
   # The SDK main branch is Rust/core-focused. TS package gates return if/when
@@ -17,6 +23,7 @@ jobs:
   rust:
     name: Rust fmt + clippy + test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: rust
